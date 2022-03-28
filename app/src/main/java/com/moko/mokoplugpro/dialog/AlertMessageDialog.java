@@ -15,7 +15,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class AlertMessageDialog extends BaseDialog {
+public class AlertMessageDialog extends MokoBaseDialog {
     public static final String TAG = AlertMessageDialog.class.getSimpleName();
     @BindView(R2.id.tv_alert_title)
     TextView tvAlertTitle;
@@ -51,7 +51,7 @@ public class AlertMessageDialog extends BaseDialog {
 
     @Override
     public int getLayoutRes() {
-        return R.layout.dialog_alert;
+        return R.layout.dialog_alert_pro;
     }
 
     @Override

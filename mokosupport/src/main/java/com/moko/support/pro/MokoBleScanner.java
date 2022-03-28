@@ -4,11 +4,14 @@ import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.ParcelUuid;
+import android.text.TextUtils;
 
 import com.elvishew.xlog.XLog;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.support.pro.callback.MokoScanDeviceCallback;
 import com.moko.support.pro.entity.DeviceInfo;
+import com.moko.support.pro.entity.OrderServices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +45,7 @@ public final class MokoBleScanner {
                 .build();
         List<ScanFilter> scanFilterList = new ArrayList<>();
         ScanFilter.Builder builder = new ScanFilter.Builder();
-        builder.setManufacturerData(0x20FF, null);
+        builder.setServiceData(new ParcelUuid(OrderServices.SERVICE_ADV.getUuid()), null);
         scanFilterList.add(builder.build());
 //        List<ScanFilter> scanFilterList = Collections.singletonList(new ScanFilter.Builder().build());
         mMokoLeScanHandler = new MokoLeScanHandler(callback);
@@ -78,7 +81,7 @@ public final class MokoBleScanner {
                 byte[] scanRecord = result.getScanRecord().getBytes();
                 String name = result.getScanRecord().getDeviceName();
                 int rssi = result.getRssi();
-                if (scanRecord.length == 0 || rssi == 127) {
+                if (TextUtils.isEmpty(name) || scanRecord.length == 0 || rssi == 127) {
                     return;
                 }
                 DeviceInfo deviceInfo = new DeviceInfo();

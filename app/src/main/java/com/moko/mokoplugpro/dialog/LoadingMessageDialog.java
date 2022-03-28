@@ -16,7 +16,7 @@ import androidx.core.content.ContextCompat;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class LoadingMessageDialog extends BaseDialog {
+public class LoadingMessageDialog extends MokoBaseDialog {
     private static final int DIALOG_DISMISS_DELAY_TIME = 5000;
     public static final String TAG = LoadingMessageDialog.class.getSimpleName();
     @BindView(R2.id.iv_loading)

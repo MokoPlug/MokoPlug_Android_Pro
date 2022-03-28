@@ -7,16 +7,12 @@ import com.moko.support.pro.entity.EnergyInfo;
 
 public class EnergyListAdapter extends BaseQuickAdapter<EnergyInfo, BaseViewHolder> {
     public EnergyListAdapter() {
-        super(R.layout.item_energy);
+        super(R.layout.item_energy_pro);
     }
 
     @Override
     protected void convert(BaseViewHolder helper, EnergyInfo item) {
-        if (item.type == 0) {
-            helper.setText(R.id.tv_date, item.hour);
-        } else {
-            helper.setText(R.id.tv_date, item.date);
-        }
+        helper.setText(R.id.tv_time, item.time);
         helper.setText(R.id.tv_value, item.value);
     }
 }

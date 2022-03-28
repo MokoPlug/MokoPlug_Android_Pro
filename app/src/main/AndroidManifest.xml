@@ -32,36 +32,68 @@
             android:windowSoftInputMode="adjustPan" />
 
         <activity
-            android:name="com.moko.mokoplugpro.activity.ModifyNameActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name="com.moko.mokoplugpro.activity.ModifyPowerStatusActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name="com.moko.mokoplugpro.activity.FirmwareUpdateActivity"
+            android:name="com.moko.mokoplugpro.activity.PowerStatusActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
 
         <activity
-            android:name="com.moko.mokoplugpro.activity.AdvIntervalActivity"
+            android:name="com.moko.mokoplugpro.activity.AdvInfoActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name="com.moko.mokoplugpro.activity.OverloadValueActivity"
+            android:name="com.moko.mokoplugpro.activity.SettingActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name="com.moko.mokoplugpro.activity.EnergySavedIntervalActivity"
+            android:name="com.moko.mokoplugpro.activity.ProtectionSettingActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name="com.moko.mokoplugpro.activity.EnergySavedPercentActivity"
+            android:name="com.moko.mokoplugpro.activity.EnergyReportActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name="com.moko.mokoplugpro.activity.MoreActivity"
+            android:name="com.moko.mokoplugpro.activity.PeriodicalReportActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.OverLoadProtectionActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.OverVoltageProtectionActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.UnderVoltageProtectionActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.OverCurrentProtectionActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.LoadStatusNotifyActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.ButtonSettingActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.SystemInfoActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.IndicatorSettingActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.BleConnectedActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.moko.mokoplugpro.activity.PowerIndicatorColorActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
 

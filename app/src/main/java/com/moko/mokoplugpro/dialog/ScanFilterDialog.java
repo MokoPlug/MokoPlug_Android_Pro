@@ -15,7 +15,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class ScanFilterDialog extends BaseDialog {
+public class ScanFilterDialog extends MokoBaseDialog {
     public static final String TAG = ScanFilterDialog.class.getSimpleName();
 
     @BindView(R2.id.et_filter_name)

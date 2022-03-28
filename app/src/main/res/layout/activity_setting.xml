@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="53dp"
+        android:background="@color/blue_2681ff"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:onClick="back"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/back" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text=""
+            android:textColor="@color/white_ffffff"
+            android:textSize="16sp" />
+
+
+        <View
+            style="@style/divider_line"
+            android:layout_alignParentBottom="true"
+            android:background="@color/grey_999999" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="53dp"
+        android:background="@color/grey_f5f5f5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="50dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onAdvertisement"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Advertisement"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="12dp"
+                    android:background="@color/white_ffffff"
+                    android:text="Connectable"
+                    android:textColor="@color/black_333333"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/iv_connectStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentRight="true"
+                    android:clickable="true"
+                    android:onClick="onConnectable"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:src="@drawable/ic_checked" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="12dp"
+                    android:background="@color/white_ffffff"
+                    android:text="Password verification"
+                    android:textColor="@color/black_333333"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/iv_password_verify_enable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentRight="true"
+                    android:clickable="true"
+                    android:onClick="onPasswordVerifyEnable"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:src="@drawable/ic_checked" />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/tv_change_password"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onChangePassword"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Change Password"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onPowerOnDefaultMode"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Power On Default Mode"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onPeriodicalReport"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Periodical Reporting"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onEnergyReport"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Energy Reporting Rules"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onProtectionSwitch"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Protection Switch"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onNotificationSwitch"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Notification Switch"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onIndicatorSetting"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Indicator Setting"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onButtonSwitch"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Button Switch"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="12dp"
+                    android:background="@color/white_ffffff"
+                    android:text="Erase Energy When Reset"
+                    android:textColor="@color/black_333333"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/iv_clear_energy_reset_enable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentRight="true"
+                    android:clickable="true"
+                    android:onClick="onClearEnergyReset"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:src="@drawable/ic_checked" />
+            </RelativeLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onCheckUpdate"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Check Update"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/right_arrow"
+                android:gravity="center_vertical"
+                android:onClick="onSystemInfo"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Device Information"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:gravity="center"
+                android:onClick="onReset"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Reset Device"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:gravity="center"
+                android:onClick="onDisconnect"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Disconnect"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

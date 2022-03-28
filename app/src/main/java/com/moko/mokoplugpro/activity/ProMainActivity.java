@@ -19,6 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.elvishew.xlog.XLog;
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
 import com.moko.ble.lib.event.OrderTaskResponseEvent;
@@ -26,15 +27,17 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.BuildConfig;
-import com.moko.mokoplugpro.PlugInfoParseableImpl;
+import com.moko.mokoplugpro.PlugInfoAnalysisImpl;
 import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.adapter.PlugListAdapter;
 import com.moko.mokoplugpro.dialog.AlertMessageDialog;
 import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.dialog.LoadingMessageDialog;
+import com.moko.mokoplugpro.dialog.PasswordDialog;
 import com.moko.mokoplugpro.dialog.ScanFilterDialog;
 import com.moko.mokoplugpro.entity.PlugInfo;
+import com.moko.mokoplugpro.utils.SPUtiles;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoBleScanner;
 import com.moko.support.pro.MokoSupport;
@@ -52,6 +55,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -78,17 +84,19 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
     private boolean mReceiverTag = false;
     private ConcurrentHashMap<String, PlugInfo> plugInfoHashMap;
     private ArrayList<PlugInfo> plugInfos;
-    private PlugInfoParseableImpl plugInfoParseable;
+    private PlugInfoAnalysisImpl plugInfoParseable;
     private PlugListAdapter adapter;
     private Handler mHandler;
+    private boolean isPasswordError;
     private MokoBleScanner mokoBleScanner;
+    private PlugInfo mSelectedPlugInfo;
 
     public static String PATH_LOGCAT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_pre);
+        setContentView(R.layout.activity_main_pro);
         ButterKnife.bind(this);
         // 初始化Xlog
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -103,6 +111,7 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
             PATH_LOGCAT = getFilesDir().getAbsolutePath() + File.separator + (BuildConfig.IS_LIBRARY ? "MokoPlug" : "MokoPlugPro");
         }
         MokoSupport.getInstance().init(getApplicationContext());
+        mSavedPassword = SPUtiles.getStringValue(this, AppConstants.SP_KEY_SAVED_PASSWORD, "");
         plugInfoHashMap = new ConcurrentHashMap<>();
         plugInfos = new ArrayList<>();
         adapter = new PlugListAdapter();
@@ -161,38 +170,36 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
     public void onConnectStatusEvent(ConnectStatusEvent event) {
         String action = event.getAction();
         if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
+            mSelectedPlugInfo = null;
+            mPassword = "";
             // 设备断开，通知页面更新
             dismissLoadingProgressDialog();
+            dismissLoadingMessageDialog();
+            if (isPasswordError) {
+                isPasswordError = false;
+            } else {
+                ToastUtils.showToast(this, "Connection Failed, please try again");
+            }
             if (animation == null) {
-                ToastUtils.showToast(ProMainActivity.this, "Disconnected");
                 startScan();
             }
         }
         if (MokoConstants.ACTION_DISCOVER_SUCCESS.equals(action)) {
-            // 设备连接成功，通知页面更新
             dismissLoadingProgressDialog();
-            showLoadingMessageDialog();
-            tvDeviceNum.postDelayed(() -> {
-                ArrayList<OrderTask> orderTasks = new ArrayList<>();
-                orderTasks.add(OrderTaskAssembler.writeSystemTime());
-                orderTasks.add(OrderTaskAssembler.readAdvInterval());
-                orderTasks.add(OrderTaskAssembler.readAdvName());
-                orderTasks.add(OrderTaskAssembler.readCountdown());
-                orderTasks.add(OrderTaskAssembler.readElectricity());
-                orderTasks.add(OrderTaskAssembler.readElectricityConstant());
-                orderTasks.add(OrderTaskAssembler.readEnergyHistory());
-                orderTasks.add(OrderTaskAssembler.readEnergyHistoryToday());
-                orderTasks.add(OrderTaskAssembler.readEnergySavedParams());
-                orderTasks.add(OrderTaskAssembler.readEnergyTotal());
-                orderTasks.add(OrderTaskAssembler.readFirmwareVersion());
-                orderTasks.add(OrderTaskAssembler.readLoadState());
-                orderTasks.add(OrderTaskAssembler.readMac());
-                orderTasks.add(OrderTaskAssembler.readOverloadTopValue());
-                orderTasks.add(OrderTaskAssembler.readOverloadValue());
-                orderTasks.add(OrderTaskAssembler.readPowerState());
-                orderTasks.add(OrderTaskAssembler.readSwitchState());
-                MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
-            }, 1000);
+            if (TextUtils.isEmpty(mPassword)) {
+                // 跳转详情
+                Intent intent = new Intent(this, DeviceInfoActivity.class);
+                intent.putExtra(AppConstants.EXTRA_KEY_PLUG_INFO, mSelectedPlugInfo);
+                startActivityForResult(intent, AppConstants.REQUEST_CODE_DEVICE_INFO);
+            } else {
+                showLoadingMessageDialog();
+                mHandler.postDelayed(() -> {
+                    // open password notify and set password
+                    List<OrderTask> orderTasks = new ArrayList<>();
+                    orderTasks.add(OrderTaskAssembler.setPassword(mPassword));
+                    MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+                }, 500);
+            }
         }
     }
 
@@ -201,7 +208,6 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         final String action = event.getAction();
         if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
             dismissLoadingMessageDialog();
-            startActivity(new Intent(ProMainActivity.this, DeviceInfoActivity.class));
         }
         if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
             OrderTaskResponse response = event.getResponse();
@@ -209,7 +215,33 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
             int responseType = response.responseType;
             byte[] value = response.responseValue;
             switch (orderCHAR) {
-
+                case CHAR_PASSWORD:
+                    if (value.length == 5) {
+                        dismissLoadingMessageDialog();
+                        int header = value[0] & 0xFF;// 0xED
+                        int flag = value[1] & 0xFF;// read or write
+                        int cmd = value[2] & 0xFF;
+                        if (header != 0xED)
+                            return;
+                        int length = value[3] & 0xFF;
+                        if (flag == 0x01 && cmd == 0x01 && length == 0x01) {
+                            int result = value[4] & 0xFF;
+                            if (1 == result) {
+                                mSavedPassword = mPassword;
+                                SPUtiles.setStringValue(ProMainActivity.this, AppConstants.SP_KEY_SAVED_PASSWORD, mSavedPassword);
+                                XLog.i("Success");
+                                Intent intent = new Intent(this, DeviceInfoActivity.class);
+                                intent.putExtra(AppConstants.EXTRA_KEY_PLUG_INFO, mSelectedPlugInfo);
+                                startActivityForResult(intent, AppConstants.REQUEST_CODE_DEVICE_INFO);
+                            }
+                            if (0 == result) {
+                                isPasswordError = true;
+                                ToastUtils.showToast(ProMainActivity.this, "Password Error!");
+                                MokoSupport.getInstance().disConnectBle();
+                            }
+                        }
+                    }
+                    break;
             }
         }
     }
@@ -219,17 +251,11 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
-                case AppConstants.REQUEST_CODE_ENABLE_BT:
-
+                case AppConstants.REQUEST_CODE_DEVICE_INFO:
+                    if (animation == null)
+                        startScan();
                     break;
 
-            }
-        } else {
-            switch (requestCode) {
-                case AppConstants.REQUEST_CODE_ENABLE_BT:
-                    // 未打开蓝牙
-                    ProMainActivity.this.finish();
-                    break;
             }
         }
     }
@@ -253,7 +279,7 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         }
         animation = AnimationUtils.loadAnimation(this, R.anim.rotate_refresh);
         findViewById(R.id.iv_refresh).startAnimation(animation);
-        plugInfoParseable = new PlugInfoParseableImpl();
+        plugInfoParseable = new PlugInfoAnalysisImpl();
         mokoBleScanner.startScanDevice(this);
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -443,6 +469,10 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         scanFilterDialog.show(getSupportFragmentManager());
     }
 
+    private String mPassword;
+    private String mSavedPassword;
+    private String mSelectedDeviceMac;
+
     @Override
     public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
         if (!MokoSupport.getInstance().isBluetoothOpen()) {
@@ -452,18 +482,61 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         }
         final PlugInfo plugInfo = (PlugInfo) adapter.getItem(position);
         if (plugInfo != null && !isFinishing()) {
+            if (plugInfo.isConnectable == 0) {
+                ToastUtils.showToast(this, "Device is unconnectable!");
+                return;
+            }
             if (animation != null) {
                 mHandler.removeMessages(0);
                 mokoBleScanner.stopScanDevice();
             }
+            mSelectedPlugInfo = plugInfo;
+            mSelectedDeviceMac = plugInfo.mac.replaceAll(":", "");
+            if (plugInfo.isNeedVerify == 1) {
+                showPasswordDialog(plugInfo);
+                return;
+            }
             showLoadingProgressDialog();
-            ivRefresh.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    MokoSupport.getInstance().connDevice(plugInfo.mac);
-                }
-            }, 1000);
+            ivRefresh.postDelayed(() -> {
+                MokoSupport.getInstance().connDevice(plugInfo.mac);
+            }, 500);
         }
+    }
+
+    private void showPasswordDialog(PlugInfo plugInfo) {
+        final PasswordDialog dialog = new PasswordDialog(this);
+        dialog.setData(mSavedPassword);
+        dialog.setOnPasswordClicked(new PasswordDialog.PasswordClickListener() {
+            @Override
+            public void onEnsureClicked(String password) {
+                if (!MokoSupport.getInstance().isBluetoothOpen()) {
+                    MokoSupport.getInstance().enableBluetooth();
+                    return;
+                }
+                XLog.i(password);
+                mPassword = password;
+                showLoadingProgressDialog();
+                ivRefresh.postDelayed(() -> {
+                    MokoSupport.getInstance().connDevice(plugInfo.mac);
+                }, 500);
+            }
+
+            @Override
+            public void onDismiss() {
+                if (animation == null) {
+                    startScan();
+                }
+            }
+        });
+        dialog.show();
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+                runOnUiThread(() -> dialog.showKeyboard());
+            }
+        }, 200);
     }
 
     private LoadingDialog mLoadingDialog;
@@ -491,6 +564,13 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
     private void dismissLoadingMessageDialog() {
         if (mLoadingMessageDialog != null)
             mLoadingMessageDialog.dismissAllowingStateLoss();
+    }
+
+
+    public void onBack(View view) {
+        if (isWindowLocked())
+            return;
+        back();
     }
 
     @Override

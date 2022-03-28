@@ -265,7 +265,7 @@ How to parse the returned results, please refer to the code of the sample projec
 The current data of electricity, countdown and overload are sent to APP by notification. you can get the value from `ACTION_CURRENT_DATA `
 
 ```
-@Subscribe(threadMode = ThreadMode.POSTING, priority = 300)
+@Subscribe(threadMode = ThreadMode.POSTING, priority = 200)
 public void onOrderTaskResponseEvent(OrderTaskResponseEvent event) {
     final String action = event.getAction();
     activity.runOnUiThread(() -> {

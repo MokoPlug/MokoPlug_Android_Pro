@@ -11,10 +11,13 @@ public class AppConstants {
     public static final String SP_NAME = "sp_name_bluetooth_plug";
 
     public static final String SP_KEY_DEVICE_ADDRESS = "sp_key_device_address";
+    public static final String SP_KEY_SAVED_PASSWORD = "SP_KEY_SAVED_PASSWORD";
     // extra_key
     // 设备列表
     public static final String EXTRA_KEY_RESPONSE_ORDER_TYPE = "EXTRA_KEY_RESPONSE_ORDER_TYPE";
     public static final String EXTRA_KEY_DEVICE_NAME = "EXTRA_KEY_DEVICE_NAME";
+    public static final String EXTRA_KEY_PLUG_INFO = "EXTRA_KEY_PLUG_INFO";
+    public static final String EXTRA_KEY_PRODUCT_TYPE = "EXTRA_KEY_PRODUCT_TYPE";
     // request_code
     public static final int REQUEST_CODE_MODIFY_NAME = 100;
     public static final int REQUEST_CODE_MODIFY_POWER_STATUS = 101;
@@ -23,6 +26,7 @@ public class AppConstants {
     public static final int REQUEST_CODE_OVERLOAD_VALUE = 104;
     public static final int REQUEST_CODE_ENERGY_SAVED_INTERVAL = 105;
     public static final int REQUEST_CODE_ENERGY_SAVED_PERCENT = 106;
+    public static final int REQUEST_CODE_DEVICE_INFO = 107;
     public static final int REQUEST_CODE_ENABLE_BT = 1001;
 
 

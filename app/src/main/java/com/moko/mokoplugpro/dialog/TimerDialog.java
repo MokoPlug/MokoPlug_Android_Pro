@@ -13,7 +13,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class TimerDialog extends BaseDialog {
+public class TimerDialog extends MokoBaseDialog {
     public static final String TAG = TimerDialog.class.getSimpleName();
 
     @BindView(R2.id.tv_switch_state)
@@ -26,7 +26,7 @@ public class TimerDialog extends BaseDialog {
 
     @Override
     public int getLayoutRes() {
-        return R.layout.dialog_timer;
+        return R.layout.dialog_timer_pro;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class TimerDialog extends BaseDialog {
         void onConfirmClick(TimerDialog dialog);
     }
 
-    public void setOnoff(boolean on_off) {
+    public void setOnOff(boolean on_off) {
         this.on_off = on_off;
     }
 

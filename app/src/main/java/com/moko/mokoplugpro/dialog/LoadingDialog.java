@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class LoadingDialog extends BaseDialog {
+public class LoadingDialog extends MokoBaseDialog {
 
     public static final String TAG = LoadingDialog.class.getSimpleName();
     @BindView(R2.id.iv_loading)

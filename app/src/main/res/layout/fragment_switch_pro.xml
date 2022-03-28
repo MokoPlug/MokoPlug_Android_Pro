@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cl_switch_bg"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black_333333">
+
+    <ImageView
+        android:id="@+id/iv_switch_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:onClick="onChangeSwitch"
+        android:src="@drawable/plug_switch_off"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.3" />
+
+
+    <TextView
+        android:id="@+id/tv_switch_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Socket is off"
+        android:textColor="@color/grey_808080"
+        android:textSize="16sp"
+        android:visibility="visible"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/iv_switch_state" />
+
+    <TextView
+        android:id="@+id/tv_countdown_tips"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/countdown_tips_pro"
+        android:textColor="@color/grey_808080"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_switch_state" />
+
+
+    <TextView
+        android:id="@+id/tv_timer"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/shape_radius_blue_btn_bg"
+        android:clickable="true"
+        android:gravity="center"
+        android:onClick="onTimer"
+        android:text="Set timer"
+        android:textColor="@color/white_ffffff"
+        android:textSize="16sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_switch_state"
+        app:layout_constraintWidth_percent="0.4" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
