@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -17,7 +18,7 @@ import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingMessageDialog;
+import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -37,7 +38,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 
-public class PowerIndicatorColorActivity extends BaseActivity implements NumberPickerView.OnValueChangeListener {
+public class PowerIndicatorColorActivity extends BaseActivity implements NumberPickerView.OnValueChangeListener, CompoundButton.OnCheckedChangeListener {
 
 
     @BindView(R2.id.cb_indicator_switch_status)
@@ -61,7 +62,6 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
     @BindView(R2.id.sv_color_setting)
     ScrollView svColorSetting;
     private int productType;
-    private int maxValue = 4416;
 
     private boolean savedParamsError;
 
@@ -73,17 +73,12 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
         setContentView(R.layout.activity_power_indicator_color);
         ButterKnife.bind(this);
         productType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_PRODUCT_TYPE, 0);
-        if (productType == 1) {
-            maxValue = 2160;
-        }
-        if (productType == 2) {
-            maxValue = 3588;
-        }
         npvColorSettings.setMinValue(0);
         npvColorSettings.setMaxValue(8);
         npvColorSettings.setValue(0);
         npvColorSettings.setOnValueChangedListener(this);
-
+        cbIndicatorSwitchStatus.setOnCheckedChangeListener(this);
+        EventBus.getDefault().register(this);
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getIndicatorPowerSwitchStatus());
         orderTasks.add(OrderTaskAssembler.getPowerIndicatorColor());
@@ -105,7 +100,7 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
         runOnUiThread(() -> {
             if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
                 if (MokoSupport.getInstance().isBluetoothOpen()) {
-                    dismissSyncProgressDialog();
+                    dismissLoadingProgressDialog();
                     finish();
                 }
             }
@@ -114,16 +109,11 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
     public void onOrderTaskResponseEvent(OrderTaskResponseEvent event) {
-        EventBus.getDefault().cancelEventDelivery(event);
         final String action = event.getAction();
+        if (!MokoConstants.ACTION_CURRENT_DATA.equals(action))
+            EventBus.getDefault().cancelEventDelivery(event);
         runOnUiThread(() -> {
-            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
-                ToastUtils.showToast(this, R.string.timeout);
-            }
-            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
-                dismissSyncProgressDialog();
-            }
-            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+            if (MokoConstants.ACTION_CURRENT_DATA.equals(action)) {
                 OrderTaskResponse response = event.getResponse();
                 OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
                 int responseType = response.responseType;
@@ -155,6 +145,20 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
                             }
                         }
                         break;
+                }
+            }
+            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
+                ToastUtils.showToast(this, R.string.timeout);
+            }
+            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
+                dismissLoadingProgressDialog();
+            }
+            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+                OrderTaskResponse response = event.getResponse();
+                OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
+                int responseType = response.responseType;
+                byte[] value = response.responseValue;
+                switch (orderCHAR) {
                     case CHAR_PARAMS:
                         if (value.length > 4) {
                             int header = value[0] & 0xFF;// 0xED
@@ -250,12 +254,12 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
         if (isWindowLocked())
             return;
         if (!cbIndicatorSwitchStatus.isChecked()) {
-            showSyncingProgressDialog();
+            showLoadingProgressDialog();
             MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setIndicatorPowerSwitchStatus(0));
             return;
         }
         if (isValid()) {
-            showSyncingProgressDialog();
+            showLoadingProgressDialog();
             saveParams();
         } else {
             ToastUtils.showToast(this, "Opps！Save failed. Please check the input characters and try again.");
@@ -347,17 +351,21 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
         EventBus.getDefault().unregister(this);
     }
 
-    private LoadingMessageDialog mLoadingMessageDialog;
+    private LoadingDialog mLoadingDialog;
 
-    public void showSyncingProgressDialog() {
-        mLoadingMessageDialog = new LoadingMessageDialog();
-        mLoadingMessageDialog.setMessage("Syncing..");
-        mLoadingMessageDialog.show(getSupportFragmentManager());
+    private void showLoadingProgressDialog() {
+        mLoadingDialog = new LoadingDialog();
+        mLoadingDialog.show(getSupportFragmentManager());
 
     }
 
-    public void dismissSyncProgressDialog() {
-        if (mLoadingMessageDialog != null)
-            mLoadingMessageDialog.dismissAllowingStateLoss();
+    private void dismissLoadingProgressDialog() {
+        if (mLoadingDialog != null)
+            mLoadingDialog.dismissAllowingStateLoss();
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        svColorSetting.setVisibility(b ? View.VISIBLE : View.GONE);
     }
 }

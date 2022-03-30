@@ -24,6 +24,7 @@ import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.dialog.AlertMessageDialog;
 import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.entity.PlugInfo;
+import com.moko.mokoplugpro.event.DataChangedEvent;
 import com.moko.mokoplugpro.fragment.EnergyFragment;
 import com.moko.mokoplugpro.fragment.PowerFragment;
 import com.moko.mokoplugpro.fragment.SwitchFragment;
@@ -65,7 +66,6 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
     private EnergyFragment energyFragment;
     private PlugInfo mPlugInfo;
     private Handler mHandler;
-    //    private boolean mIsOver;
     private String mOverStatusShown;
     private int mOverStatus;
 
@@ -81,20 +81,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
         tvTitle.setText(mPlugInfo.name);
         mHandler = new Handler(Looper.getMainLooper());
         EventBus.getDefault().register(this);
-        if (mPlugInfo.overLoad == 1)
-            mOverStatus = 1;
-        if (mPlugInfo.overVoltage == 1)
-            mOverStatus = 2;
-        if (mPlugInfo.overCurrent == 1)
-            mOverStatus = 3;
-        if (mPlugInfo.sagVoltage == 1)
-            mOverStatus = 4;
-        if (mOverStatus > 0) {
-//            mIsOver = true;
-            showOverDialog();
-            return;
-        }
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
             List<OrderTask> orderTasks = new ArrayList<>();
             orderTasks.add(OrderTaskAssembler.setSystemTime());
@@ -104,6 +91,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     private void showOverDialog() {
+        dismissLoadingProgressDialog();
         mOverStatusShown = "";
         if (mOverStatus == 1)
             mOverStatusShown = "overload";
@@ -134,6 +122,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
             MokoSupport.getInstance().disConnectBle();
         });
         dialog.setOnAlertConfirmListener(() -> {
+            showLoadingProgressDialog();
             clearOverStatus();
         });
         dialog.show(getSupportFragmentManager());
@@ -155,18 +144,19 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                 .commit();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDataChangedEvent(DataChangedEvent event) {
+        String value = event.getValue();
+        tvTitle.setText(value);
+    }
+
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
         final String action = event.getAction();
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
-//                    MokoSupport.getInstance().countDown = 0;
-//                    MokoSupport.getInstance().countDownInit = 0;
-                    setResult(RESULT_OK);
-                    finish();
-                }
+        runOnUiThread(() -> {
+            if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
+                setResult(RESULT_OK);
+                finish();
             }
         });
     }
@@ -198,7 +188,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                                     case KEY_LOAD_STATUS:
                                         if (length > 0) {
                                             int status = value[4] & 0xFF;
-                                            ToastUtils.showToast(this, status == 1 ? "Load starts" : "tops working now!");
+                                            ToastUtils.showToast(this, status == 1 ? "Load starts working now!" : "Load stops working now!");
                                         }
                                         break;
                                     case KEY_OVER_LOAD:
@@ -225,10 +215,28 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                                             showOverDialog();
                                         }
                                         break;
+                                    case KEY_DISCONNECT:
+                                        if (length > 0) {
+                                            int disconnectType = value[4] & 0xFF;
+                                            if (disconnectType == 2)
+                                                ToastUtils.showToast(this, "Bluetooth disconnect!");
+                                        }
+                                        break;
                                 }
                             }
                         }
                         break;
+                }
+            }
+            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
+                dismissLoadingProgressDialog();
+            }
+            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+                OrderTaskResponse response = event.getResponse();
+                OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
+                int responseType = response.responseType;
+                byte[] value = response.responseValue;
+                switch (orderCHAR) {
                     case CHAR_CONFIG:
                         if (value.length > 4) {
                             int header = value[0] & 0xFF;// 0xED
@@ -248,8 +256,25 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                                     case KEY_OVER_CURRENT_CLEAR:
                                     case KEY_SAG_VOLTAGE_CLEAR:
                                         if (length > 0 && value[4] == 1) {
-                                            showSyncingProgressDialog();
-                                            MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setSystemTime());
+                                            mOverStatus = 0;
+                                        }
+                                        break;
+                                }
+                            }
+                            if (flag == 0x00) {
+                                switch (configKeyEnum) {
+                                    case KEY_SWITCH_STATUS:
+                                        if (length == 5) {
+                                            if (value[5] == 1)
+                                                mOverStatus = 1;
+                                            if (value[7] == 1)
+                                                mOverStatus = 2;
+                                            if (value[6] == 1)
+                                                mOverStatus = 3;
+                                            if (value[8] == 1)
+                                                mOverStatus = 4;
+                                            if (mOverStatus > 0)
+                                                showOverDialog();
                                         }
                                         break;
                                 }
@@ -315,7 +340,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                 .hide(powerFragment)
                 .show(energyFragment)
                 .commit();
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.getEnergyHourly());
     }
 
@@ -325,7 +350,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                 .show(powerFragment)
                 .hide(energyFragment)
                 .commit();
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.getPowerData());
     }
 
@@ -339,20 +364,19 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
 
 
     private void clearOverStatus() {
-        showSyncingProgressDialog();
-        if (mPlugInfo.overLoad == 1) {
+        if (mOverStatus == 1) {
             XLog.i("清除过载状态");
             MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setOverLoadClear());
         }
-        if (mPlugInfo.overVoltage == 1) {
+        if (mOverStatus == 2) {
             XLog.i("清除过压状态");
             MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setOverVoltageClear());
         }
-        if (mPlugInfo.overCurrent == 1) {
+        if (mOverStatus == 3) {
             XLog.i("清除过流状态");
             MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setOverCurrentClear());
         }
-        if (mPlugInfo.sagVoltage == 1) {
+        if (mOverStatus == 4) {
             XLog.i("清除欠压状态");
             MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setSagVoltageClear());
         }
@@ -369,7 +393,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     public void changeSwitchState(boolean onOff) {
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.setSwitchStatus(onOff ? 1 : 0));
         orderTasks.add(OrderTaskAssembler.getSwitchStatus());
@@ -390,7 +414,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     public void setTimer(int countdown) {
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setCountdown(countdown));
     }
 
@@ -400,17 +424,17 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
 
 
     public void getEnergyHourly() {
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.getEnergyHourly());
     }
 
     public void getEnergyDaily() {
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.getEnergyDaily());
     }
 
     public void getEnergyTotally() {
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.getEnergyTotally());
     }
 
@@ -421,7 +445,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
         dialog.setTitle("Reset Energy Data");
         dialog.setMessage("After reset, all energy data will be deleted, please confirm again whether to reset it?");
         dialog.setOnAlertConfirmListener(() -> {
-            showSyncingProgressDialog();
+            showLoadingProgressDialog();
             List<OrderTask> orderTasks = new ArrayList<>();
             orderTasks.add(OrderTaskAssembler.setEnergyClear());
             orderTasks.add(OrderTaskAssembler.getEnergyTotally());
@@ -430,130 +454,12 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
         dialog.show(getSupportFragmentManager());
     }
 
-
-//    public void onModifyName(View view) {
-//        if (isWindowLocked())
-//            return;
-//        startActivityForResult(new Intent(this, ModifyNameActivity.class), AppConstants.REQUEST_CODE_MODIFY_NAME);
-//    }
-//
-//    public void onModifyPowerStatus(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 修改上电状态
-//        startActivityForResult(new Intent(this, ModifyPowerStatusActivity.class), AppConstants.REQUEST_CODE_MODIFY_POWER_STATUS);
-//
-//    }
-//
-//    public void onCheckUpdate(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 升级
-//        startActivityForResult(new Intent(this, FirmwareUpdateActivity.class), AppConstants.REQUEST_CODE_UPDATE);
-//
-//    }
-//
-//    public void onModifyAdvInterval(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 修改广播间隔
-//        startActivityForResult(new Intent(this, AdvIntervalActivity.class), AppConstants.REQUEST_CODE_ADV_INTERVAL);
-//
-//    }
-//
-//    public void onModifyOverloadValue(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 修改过载保护值
-//        startActivityForResult(new Intent(this, OverloadValueActivity.class), AppConstants.REQUEST_CODE_OVERLOAD_VALUE);
-//
-//    }
-//
-//    public void onModifyPowerReportInterval(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 修改电能上报间隔
-//        startActivityForResult(new Intent(this, EnergySavedIntervalActivity.class), AppConstants.REQUEST_CODE_ENERGY_SAVED_INTERVAL);
-//    }
-//
-//    public void onModifyPowerChangeNotification(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 修改电能变化百分比
-//        startActivityForResult(new Intent(this, EnergySavedPercentActivity.class), AppConstants.REQUEST_CODE_ENERGY_SAVED_PERCENT);
-//    }
-
-//    public void onModifyEnergyConsumption(View view) {
-//        if (isWindowLocked())
-//            return;
-//        // 重置累计电能
-//        AlertMessageDialog dialog = new AlertMessageDialog();
-//        dialog.setTitle("Reset Energy Consumption");
-//        dialog.setMessage("Please confirm again whether to reset the accumulated electricity? Value will be recounted after clearing.");
-//        dialog.setOnAlertConfirmListener(new AlertMessageDialog.OnAlertConfirmListener() {
-//            @Override
-//            public void onClick() {
-//                showSyncingProgressDialog();
-//                OrderTask orderTask = OrderTaskAssembler.writeResetEnergyTotal();
-//                MokoSupport.getInstance().sendOrder(orderTask);
-//            }
-//        });
-//        dialog.show(getSupportFragmentManager());
-//    }
-//
-//    public void onReset(View view) {
-//        if (isWindowLocked())
-//            return;
-//        AlertMessageDialog dialog = new AlertMessageDialog();
-//        dialog.setTitle("Reset Device");
-//        dialog.setMessage("After reset,the relevant data will be totally cleared");
-//        dialog.setOnAlertConfirmListener(new AlertMessageDialog.OnAlertConfirmListener() {
-//            @Override
-//            public void onClick() {
-//                showSyncingProgressDialog();
-//                OrderTask orderTask = OrderTaskAssembler.writeReset();
-//                MokoSupport.getInstance().sendOrder(orderTask);
-//            }
-//        });
-//        dialog.show(getSupportFragmentManager());
-//    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == AppConstants.REQUEST_CODE_MODIFY_NAME) {
-//            if (resultCode == RESULT_OK) {
-//                final String deviceName = MokoSupport.getInstance().advName;
-//                settingFragment.setDeviceName(deviceName);
-//                changeName();
-//            }
-//        }
-//        if (requestCode == AppConstants.REQUEST_CODE_ADV_INTERVAL) {
-//            if (resultCode == RESULT_OK) {
-//                final int advInterval = MokoSupport.getInstance().advInterval;
-//                settingFragment.setAdvInterval(advInterval);
-//            }
-//        }
-//        if (requestCode == AppConstants.REQUEST_CODE_OVERLOAD_VALUE) {
-//            if (resultCode == RESULT_OK) {
-//                final int overloadTopValue = MokoSupport.getInstance().overloadTopValue;
-//                settingFragment.setOverloadTopValue(overloadTopValue);
-//            }
-//        }
-//        if (requestCode == AppConstants.REQUEST_CODE_ENERGY_SAVED_INTERVAL) {
-//            if (resultCode == RESULT_OK) {
-//                final int energySavedInterval = MokoSupport.getInstance().energySavedInterval;
-//                settingFragment.setEnergySavedInterval(energySavedInterval);
-//            }
-//        }
-//        if (requestCode == AppConstants.REQUEST_CODE_ENERGY_SAVED_PERCENT) {
-//            if (resultCode == RESULT_OK) {
-//                final int energySavedPercent = MokoSupport.getInstance().energySavedPercent;
-//                settingFragment.setEnergySavedPercent(energySavedPercent);
-//            }
-//        }
         if (requestCode == AppConstants.REQUEST_CODE_UPDATE) {
             if (resultCode == RESULT_OK) {
+                setResult(RESULT_OK);
                 finish();
             }
         }
@@ -561,7 +467,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
 
     private LoadingDialog mLoadingDialog;
 
-    public void showSyncingProgressDialog() {
+    public void showLoadingProgressDialog() {
         mLoadingDialog = new LoadingDialog();
         mLoadingDialog.show(getSupportFragmentManager());
 

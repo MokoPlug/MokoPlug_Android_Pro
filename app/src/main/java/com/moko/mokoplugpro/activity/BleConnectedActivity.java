@@ -12,7 +12,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingMessageDialog;
+import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -49,7 +49,7 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
 
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getIndicatorBleConnectedStatus());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
@@ -61,7 +61,7 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
         runOnUiThread(() -> {
             if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
                 if (MokoSupport.getInstance().isBluetoothOpen()) {
-                    dismissSyncProgressDialog();
+                    dismissLoadingProgressDialog();
                     finish();
                 }
             }
@@ -70,16 +70,11 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
     public void onOrderTaskResponseEvent(OrderTaskResponseEvent event) {
-        EventBus.getDefault().cancelEventDelivery(event);
         final String action = event.getAction();
+        if (!MokoConstants.ACTION_CURRENT_DATA.equals(action))
+            EventBus.getDefault().cancelEventDelivery(event);
         runOnUiThread(() -> {
-            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
-                ToastUtils.showToast(this, R.string.timeout);
-            }
-            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
-                dismissSyncProgressDialog();
-            }
-            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+            if (MokoConstants.ACTION_CURRENT_DATA.equals(action)) {
                 OrderTaskResponse response = event.getResponse();
                 OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
                 int responseType = response.responseType;
@@ -111,6 +106,20 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
                             }
                         }
                         break;
+                }
+            }
+            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
+                ToastUtils.showToast(this, R.string.timeout);
+            }
+            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
+                dismissLoadingProgressDialog();
+            }
+            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+                OrderTaskResponse response = event.getResponse();
+                OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
+                int responseType = response.responseType;
+                byte[] value = response.responseValue;
+                switch (orderCHAR) {
                     case CHAR_PARAMS:
                         if (value.length > 4) {
                             int header = value[0] & 0xFF;// 0xED
@@ -172,32 +181,31 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
         EventBus.getDefault().unregister(this);
     }
 
-    private LoadingMessageDialog mLoadingMessageDialog;
+    private LoadingDialog mLoadingDialog;
 
-    public void showSyncingProgressDialog() {
-        mLoadingMessageDialog = new LoadingMessageDialog();
-        mLoadingMessageDialog.setMessage("Syncing..");
-        mLoadingMessageDialog.show(getSupportFragmentManager());
+    private void showLoadingProgressDialog() {
+        mLoadingDialog = new LoadingDialog();
+        mLoadingDialog.show(getSupportFragmentManager());
 
     }
 
-    public void dismissSyncProgressDialog() {
-        if (mLoadingMessageDialog != null)
-            mLoadingMessageDialog.dismissAllowingStateLoss();
+    private void dismissLoadingProgressDialog() {
+        if (mLoadingDialog != null)
+            mLoadingDialog.dismissAllowingStateLoss();
     }
 
     int bleState;
 
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {
-        if (checkedId == R2.id.rb_off) {
+        if (checkedId == R.id.rb_off) {
             bleState = 0;
-        } else if (checkedId == R2.id.rb_solid_blue_5) {
+        } else if (checkedId == R.id.rb_solid_blue_5) {
             bleState = 1;
-        } else if (checkedId == R2.id.rb_solid_blue) {
+        } else if (checkedId == R.id.rb_solid_blue) {
             bleState = 2;
         }
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setIndicatorBleConnectedStatus(bleState));
     }
 

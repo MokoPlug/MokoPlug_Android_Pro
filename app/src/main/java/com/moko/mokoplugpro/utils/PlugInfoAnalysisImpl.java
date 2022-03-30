@@ -1,4 +1,4 @@
-package com.moko.mokoplugpro;
+package com.moko.mokoplugpro.utils;
 
 import android.util.SparseArray;
 

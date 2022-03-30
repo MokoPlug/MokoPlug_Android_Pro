@@ -11,11 +11,10 @@ import com.moko.ble.lib.event.ConnectStatusEvent;
 import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
-import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingMessageDialog;
+import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -28,7 +27,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindView;
@@ -52,7 +50,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         ButterKnife.bind(this);
         productType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_PRODUCT_TYPE, 0);
         EventBus.getDefault().register(this);
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getOverCurrentProtection());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
@@ -64,7 +62,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         runOnUiThread(() -> {
             if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
                 if (MokoSupport.getInstance().isBluetoothOpen()) {
-                    dismissSyncProgressDialog();
+                    dismissLoadingProgressDialog();
                     finish();
                 }
             }
@@ -73,16 +71,11 @@ public class OverCurrentProtectionActivity extends BaseActivity {
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
     public void onOrderTaskResponseEvent(OrderTaskResponseEvent event) {
-        EventBus.getDefault().cancelEventDelivery(event);
         final String action = event.getAction();
+        if (!MokoConstants.ACTION_CURRENT_DATA.equals(action))
+            EventBus.getDefault().cancelEventDelivery(event);
         runOnUiThread(() -> {
-            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
-                ToastUtils.showToast(this, R.string.timeout);
-            }
-            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
-                dismissSyncProgressDialog();
-            }
-            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+            if (MokoConstants.ACTION_CURRENT_DATA.equals(action)) {
                 OrderTaskResponse response = event.getResponse();
                 OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
                 int responseType = response.responseType;
@@ -114,6 +107,20 @@ public class OverCurrentProtectionActivity extends BaseActivity {
                             }
                         }
                         break;
+                }
+            }
+            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
+                ToastUtils.showToast(this, R.string.timeout);
+            }
+            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
+                dismissLoadingProgressDialog();
+            }
+            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+                OrderTaskResponse response = event.getResponse();
+                OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
+                int responseType = response.responseType;
+                byte[] value = response.responseValue;
+                switch (orderCHAR) {
                     case CHAR_PARAMS:
                         if (value.length > 4) {
                             int header = value[0] & 0xFF;// 0xED
@@ -141,13 +148,12 @@ public class OverCurrentProtectionActivity extends BaseActivity {
                             if (flag == 0x00) {
                                 switch (paramsKeyEnum) {
                                     case KEY_OVER_CURRENT_PROTECTION:
-                                        if (length == 4) {
+                                        if (length == 3) {
                                             int enable = value[4] & 0xFF;
                                             cbOverCurrentProtection.setChecked(enable == 1);
-                                            int threshold = MokoUtils.toInt(Arrays.copyOfRange(value, 5, 7));
-                                            String thresholdStr = MokoUtils.getDecimalFormat("0.#").format(threshold * 0.1);
-                                            etCurrentThreshold.setText(thresholdStr);
-                                            etTimeThreshold.setText(String.valueOf(value[7] & 0xFF));
+                                            int threshold = value[5] & 0xFF;
+                                            etCurrentThreshold.setText(String.valueOf(threshold));
+                                            etTimeThreshold.setText(String.valueOf(value[6] & 0xFF));
                                         }
                                         break;
 
@@ -165,7 +171,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         if (isWindowLocked())
             return;
         if (isValid()) {
-            showSyncingProgressDialog();
+            showLoadingProgressDialog();
             saveParams();
         } else {
             ToastUtils.showToast(this, "Opps！Save failed. Please check the input characters and try again.");
@@ -175,7 +181,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
     private void saveParams() {
         final String currentThresholdStr = etCurrentThreshold.getText().toString();
         final String timeThresholdStr = etTimeThreshold.getText().toString();
-        final int currentThreshold = (int) (Float.parseFloat(currentThresholdStr) * 10);
+        final int currentThreshold = Integer.parseInt(currentThresholdStr);
         final int timeThreshold = Integer.parseInt(timeThresholdStr);
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.setOverCurrentProtection(cbOverCurrentProtection.isChecked() ? 1 : 0, currentThreshold, timeThreshold));
@@ -183,18 +189,18 @@ public class OverCurrentProtectionActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        float max = 19.2f;
+        int max = 192;
         if (productType == 1) {
-            max = 18;
+            max = 180;
         } else if (productType == 2) {
-            max = 15.6f;
+            max = 156;
         }
         final String currentThresholdStr = etCurrentThreshold.getText().toString();
         if (TextUtils.isEmpty(currentThresholdStr)) {
             return false;
         }
         final int currentThreshold = Integer.parseInt(currentThresholdStr);
-        if (currentThreshold < 0.1 || currentThreshold > max) {
+        if (currentThreshold < 1 || currentThreshold > max) {
             return false;
         }
         final String timeThresholdStr = etTimeThreshold.getText().toString();
@@ -221,17 +227,16 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         EventBus.getDefault().unregister(this);
     }
 
-    private LoadingMessageDialog mLoadingMessageDialog;
+    private LoadingDialog mLoadingDialog;
 
-    public void showSyncingProgressDialog() {
-        mLoadingMessageDialog = new LoadingMessageDialog();
-        mLoadingMessageDialog.setMessage("Syncing..");
-        mLoadingMessageDialog.show(getSupportFragmentManager());
+    private void showLoadingProgressDialog() {
+        mLoadingDialog = new LoadingDialog();
+        mLoadingDialog.show(getSupportFragmentManager());
 
     }
 
-    public void dismissSyncProgressDialog() {
-        if (mLoadingMessageDialog != null)
-            mLoadingMessageDialog.dismissAllowingStateLoss();
+    private void dismissLoadingProgressDialog() {
+        if (mLoadingDialog != null)
+            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

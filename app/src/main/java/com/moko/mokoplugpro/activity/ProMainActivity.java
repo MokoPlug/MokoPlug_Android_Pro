@@ -27,7 +27,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.BuildConfig;
-import com.moko.mokoplugpro.PlugInfoAnalysisImpl;
+import com.moko.mokoplugpro.utils.PlugInfoAnalysisImpl;
 import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.adapter.PlugListAdapter;
@@ -60,13 +60,15 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 
-public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallback, BaseQuickAdapter.OnItemClickListener {
+public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallback, BaseQuickAdapter.OnItemChildClickListener {
 
 
     @BindView(R2.id.rv_devices)
@@ -116,9 +118,12 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         plugInfos = new ArrayList<>();
         adapter = new PlugListAdapter();
         adapter.replaceData(plugInfos);
-        adapter.setOnItemClickListener(this);
+        adapter.setOnItemChildClickListener(this);
         adapter.openLoadAnimation();
         rvDevices.setLayoutManager(new LinearLayoutManager(this));
+        DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        itemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.shape_recycleview_divider));
+        rvDevices.addItemDecoration(itemDecoration);
         rvDevices.setAdapter(adapter);
         mHandler = new Handler(Looper.getMainLooper());
         mokoBleScanner = new MokoBleScanner(this);
@@ -474,18 +479,14 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
     private String mSelectedDeviceMac;
 
     @Override
-    public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+    public void onItemChildClick(BaseQuickAdapter adapter, View view, int position) {
         if (!MokoSupport.getInstance().isBluetoothOpen()) {
             // 蓝牙未打开，开启蓝牙
             MokoSupport.getInstance().enableBluetooth();
             return;
         }
         final PlugInfo plugInfo = (PlugInfo) adapter.getItem(position);
-        if (plugInfo != null && !isFinishing()) {
-            if (plugInfo.isConnectable == 0) {
-                ToastUtils.showToast(this, "Device is unconnectable!");
-                return;
-            }
+        if (plugInfo != null && plugInfo.isConnectable != 0 && !isFinishing()) {
             if (animation != null) {
                 mHandler.removeMessages(0);
                 mokoBleScanner.stopScanDevice();

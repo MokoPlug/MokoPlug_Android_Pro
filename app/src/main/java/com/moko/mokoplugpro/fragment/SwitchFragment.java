@@ -17,7 +17,6 @@ import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.activity.DeviceInfoActivity;
 import com.moko.mokoplugpro.dialog.TimerDialog;
-import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.entity.ConfigKeyEnum;
 import com.moko.support.pro.entity.NotifyKeyEnum;
 import com.moko.support.pro.entity.OrderCHAR;
@@ -162,11 +161,16 @@ public class SwitchFragment extends Fragment {
     }
 
     private void changeSwitchStatus(int status) {
+        if (status == countdownOnOff) {
+            countdownOnOff = -1;
+            tvCountdownTips.setVisibility(View.GONE);
+        }
         onOff = status == 1;
         clSwitchBg.setBackgroundColor(ContextCompat.getColor(activity, onOff ? R.color.grey_f5f5f5 : R.color.black_333333));
         ivSwitchState.setImageDrawable(ContextCompat.getDrawable(activity, onOff ? R.drawable.plug_switch_on : R.drawable.plug_switch_off));
         tvSwitchState.setText(String.format("Socket is %s", onOff ? "on" : "off"));
         tvSwitchState.setTextColor(ContextCompat.getColor(activity, onOff ? R.color.blue_2681ff : R.color.grey_808080));
+        tvCountdownTips.setTextColor(ContextCompat.getColor(activity, onOff ? R.color.blue_2681ff : R.color.grey_808080));
     }
 
     public boolean getSwitchState() {
@@ -187,8 +191,11 @@ public class SwitchFragment extends Fragment {
         timerDialog.show(activity.getSupportFragmentManager());
     }
 
+    private int countdownOnOff = -1;
+
     private void setCountdown(int switchStatus, int countdown) {
-        if (countdown > 0) {
+        countdownOnOff = switchStatus;
+        if (countdown > 1) {
             tvCountdownTips.setVisibility(View.VISIBLE);
             int hour = countdown / 3600;
             int minute = (countdown % 3600) / 60;

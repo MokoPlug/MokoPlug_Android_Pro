@@ -13,7 +13,7 @@ import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.R;
 import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingMessageDialog;
+import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -47,7 +47,7 @@ public class EnergyReportActivity extends BaseActivity {
         setContentView(R.layout.activity_energy_report);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
-        showSyncingProgressDialog();
+        showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getEnergySavedInterval());
         orderTasks.add(OrderTaskAssembler.getPowerChangeThreshold());
@@ -60,7 +60,7 @@ public class EnergyReportActivity extends BaseActivity {
         runOnUiThread(() -> {
             if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
                 if (MokoSupport.getInstance().isBluetoothOpen()) {
-                    dismissSyncProgressDialog();
+                    dismissLoadingProgressDialog();
                     finish();
                 }
             }
@@ -69,16 +69,11 @@ public class EnergyReportActivity extends BaseActivity {
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
     public void onOrderTaskResponseEvent(OrderTaskResponseEvent event) {
-        EventBus.getDefault().cancelEventDelivery(event);
         final String action = event.getAction();
+        if (!MokoConstants.ACTION_CURRENT_DATA.equals(action))
+            EventBus.getDefault().cancelEventDelivery(event);
         runOnUiThread(() -> {
-            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
-                ToastUtils.showToast(this, R.string.timeout);
-            }
-            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
-                dismissSyncProgressDialog();
-            }
-            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+            if (MokoConstants.ACTION_CURRENT_DATA.equals(action)) {
                 OrderTaskResponse response = event.getResponse();
                 OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
                 int responseType = response.responseType;
@@ -110,6 +105,21 @@ public class EnergyReportActivity extends BaseActivity {
                             }
                         }
                         break;
+                }
+            }
+            if (MokoConstants.ACTION_ORDER_TIMEOUT.equals(action)) {
+                ToastUtils.showToast(this, R.string.timeout);
+            }
+            if (MokoConstants.ACTION_ORDER_FINISH.equals(action)) {
+                dismissLoadingProgressDialog();
+            }
+            if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
+                OrderTaskResponse response = event.getResponse();
+                OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
+                int responseType = response.responseType;
+                byte[] value = response.responseValue;
+                switch (orderCHAR) {
+
                     case CHAR_PARAMS:
                         if (value.length > 4) {
                             int header = value[0] & 0xFF;// 0xED
@@ -152,7 +162,7 @@ public class EnergyReportActivity extends BaseActivity {
                                         }
                                         break;
                                     case KEY_POWER_CHANGE_THRESHOLD:
-                                        if (length == 2) {
+                                        if (length == 1) {
                                             int threshold = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length));
                                             etPowerChangeThreshold.setText(String.valueOf(threshold));
                                         }
@@ -171,7 +181,7 @@ public class EnergyReportActivity extends BaseActivity {
         if (isWindowLocked())
             return;
         if (isValid()) {
-            showSyncingProgressDialog();
+            showLoadingProgressDialog();
             saveParams();
         } else {
             ToastUtils.showToast(this, "Opps！Save failed. Please check the input characters and try again.");
@@ -222,17 +232,16 @@ public class EnergyReportActivity extends BaseActivity {
         EventBus.getDefault().unregister(this);
     }
 
-    private LoadingMessageDialog mLoadingMessageDialog;
+    private LoadingDialog mLoadingDialog;
 
-    public void showSyncingProgressDialog() {
-        mLoadingMessageDialog = new LoadingMessageDialog();
-        mLoadingMessageDialog.setMessage("Syncing..");
-        mLoadingMessageDialog.show(getSupportFragmentManager());
+    private void showLoadingProgressDialog() {
+        mLoadingDialog = new LoadingDialog();
+        mLoadingDialog.show(getSupportFragmentManager());
 
     }
 
-    public void dismissSyncProgressDialog() {
-        if (mLoadingMessageDialog != null)
-            mLoadingMessageDialog.dismissAllowingStateLoss();
+    private void dismissLoadingProgressDialog() {
+        if (mLoadingDialog != null)
+            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

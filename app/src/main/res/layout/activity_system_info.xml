@@ -146,12 +146,27 @@
             android:id="@+id/tv_firmware_version"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="12dp"
+            android:layout_toLeftOf="@id/tv_dfu"
             android:background="@color/white_ffffff"
             android:text=""
             android:textColor="@color/black_333333"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tv_dfu"
+            android:layout_width="70dp"
+            android:layout_height="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="12dp"
+            android:background="@drawable/shape_radius_blue_btn_bg_pro"
+            android:clickable="true"
+            android:gravity="center"
+            android:onClick="onUpdateFirmware"
+            android:text="DFU"
+            android:textColor="@color/white_ffffff"
             android:textSize="15sp" />
 
         <View

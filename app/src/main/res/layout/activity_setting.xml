@@ -180,7 +180,7 @@
                 android:onClick="onEnergyReport"
                 android:paddingLeft="12dp"
                 android:paddingRight="12dp"
-                android:text="Energy Reporting Rules"
+                android:text="Energy Reporting Setting"
                 android:textColor="@color/black_333333"
                 android:textSize="15sp" />
 
@@ -240,7 +240,7 @@
                 android:onClick="onButtonSwitch"
                 android:paddingLeft="12dp"
                 android:paddingRight="12dp"
-                android:text="Button Switch"
+                android:text="Button Setting"
                 android:textColor="@color/black_333333"
                 android:textSize="15sp" />
 
@@ -272,25 +272,11 @@
                     android:src="@drawable/ic_checked" />
             </RelativeLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="10dp"
-                android:background="@color/white_ffffff"
-                android:clickable="true"
-                android:drawableRight="@drawable/right_arrow"
-                android:gravity="center_vertical"
-                android:onClick="onCheckUpdate"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
-                android:text="Check Update"
-                android:textColor="@color/black_333333"
-                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="10dp"
                 android:background="@color/white_ffffff"
                 android:clickable="true"
                 android:drawableRight="@drawable/right_arrow"

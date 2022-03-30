@@ -9,7 +9,6 @@ import com.moko.support.pro.task.GetFirmwareRevisionTask;
 import com.moko.support.pro.task.GetMacTask;
 import com.moko.support.pro.task.GetManufacturerNameTask;
 import com.moko.support.pro.task.GetModelNumberTask;
-import com.moko.support.pro.task.GetProductTypeTask;
 import com.moko.support.pro.task.GetSoftwareRevisionTask;
 import com.moko.support.pro.task.ParamsTask;
 import com.moko.support.pro.task.SetPasswordTask;
@@ -53,6 +52,12 @@ public class OrderTaskAssembler {
     public static OrderTask getPassword() {
         ParamsTask task = new ParamsTask();
         task.setData(ParamsKeyEnum.KEY_PASSWORD);
+        return task;
+    }
+
+    public static OrderTask changePassword(String password) {
+        ParamsTask task = new ParamsTask();
+        task.setPassword(password);
         return task;
     }
 
@@ -165,9 +170,9 @@ public class OrderTaskAssembler {
         return task;
     }
 
-    public static OrderTask setIndicatorBleConnectedStatus(@IntRange(from = 0, to = 1) int enable) {
+    public static OrderTask setIndicatorBleConnectedStatus(@IntRange(from = 0, to = 2) int status) {
         ParamsTask task = new ParamsTask();
-        task.setIndicatorBleConnectedStatus(enable);
+        task.setIndicatorBleConnectedStatus(status);
         return task;
     }
 
@@ -333,7 +338,7 @@ public class OrderTaskAssembler {
 
     public static OrderTask getLoadNotifySwitch() {
         ParamsTask task = new ParamsTask();
-        task.setData(ParamsKeyEnum.KEY_ENERGY_SAVED_INTERVAL);
+        task.setData(ParamsKeyEnum.KEY_LOAD_SWITCH);
         return task;
     }
 

@@ -59,11 +59,12 @@
                 android:layout_weight="1.0"
                 android:gravity="center"
                 android:text="@string/cancel"
-                android:textColor="@color/text_black_4d4d4d"
+                android:textColor="@color/blue_2681ff"
                 android:textSize="16sp" />
 
             <View
                 android:id="@+id/view_divider"
+                style="@style/divider_line"
                 android:layout_width="1px"
                 android:layout_height="match_parent" />
 
@@ -74,7 +75,7 @@
                 android:layout_weight="1.0"
                 android:gravity="center"
                 android:text="@string/confirm"
-                android:textColor="@color/text_black_4d4d4d"
+                android:textColor="@color/blue_2681ff"
                 android:textSize="16sp" />
         </LinearLayout>
     </LinearLayout>

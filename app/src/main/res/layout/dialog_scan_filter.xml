@@ -83,7 +83,7 @@
             android:layout_height="32dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="32dp"
-            android:background="@drawable/shape_radius_blue_btn_bg"
+            android:background="@drawable/shape_radius_blue_btn_bg_pro"
             android:gravity="center"
             android:text="Done"
             android:textColor="@color/white_ffffff"

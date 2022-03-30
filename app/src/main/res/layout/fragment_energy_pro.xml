@@ -66,6 +66,7 @@
         app:layout_constraintTop_toBottomOf="@id/rg_energy">
 
         <TextView
+            android:id="@+id/tv_energy_desc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Today energy："
@@ -164,8 +165,8 @@
     <TextView
         android:id="@+id/tv_clear_energy_data"
         android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:background="@drawable/shape_radius_blue_btn_bg"
+        android:layout_height="40dp"
+        android:background="@drawable/shape_radius_blue_btn_bg_pro"
         android:clickable="true"
         android:gravity="center"
         android:onClick="onClearEnergyData"

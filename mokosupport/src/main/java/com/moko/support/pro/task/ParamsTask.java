@@ -148,13 +148,13 @@ public class ParamsTask extends OrderTask {
         response.responseValue = data;
     }
 
-    public void setIndicatorBleConnectedStatus(@IntRange(from = 0, to = 1) int enable) {
+    public void setIndicatorBleConnectedStatus(@IntRange(from = 0, to = 2) int status) {
         data = new byte[]{
                 (byte) 0xED,
                 (byte) 0x01,
                 (byte) ParamsKeyEnum.KEY_INDICATOR_BLE_CONNECTED_STATUS.getParamsKey(),
                 (byte) 0x01,
-                (byte) enable
+                (byte) status
         };
         response.responseValue = data;
     }

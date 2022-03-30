@@ -139,5 +139,5 @@
         android:overScrollMode="never"
         android:paddingLeft="12dp"
         android:paddingRight="12dp"
-        tools:listitem="@layout/item_device" />
+        tools:listitem="@layout/item_device_pro" />
 </LinearLayout>
