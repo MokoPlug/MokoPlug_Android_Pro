@@ -191,10 +191,10 @@ public class OverVoltageProtectionActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        int min = 200;
+        int min = 231;
         int max = 264;
         if (productType == 1) {
-            min = 100;
+            min = 121;
             max = 138;
         }
         final String voltageThresholdStr = etVoltageThreshold.getText().toString();

@@ -48,7 +48,7 @@ public class PlugInfoAnalysisImpl implements DeviceInfoAnalysis<PlugInfo> {
         int state = manufacturerData[22] & 0xFF;
         voltage = MokoUtils.getDecimalFormat("0.#").format(MokoUtils.toInt(voltageBytes) * 0.1f);
         current = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toIntSigned(currentBytes) * 0.001f);
-        power = MokoUtils.getDecimalFormat("0.#").format(MokoUtils.toInt(powerBytes) * 0.1f);
+        power = MokoUtils.getDecimalFormat("0.#").format(MokoUtils.toIntSigned(powerBytes) * 0.1f);
         currentRate = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(currentRateBytes) * 0.01f);
         energyTotal = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyTotalBytes) * 0.01f);
         if ((state & 0x01) == 0x01)

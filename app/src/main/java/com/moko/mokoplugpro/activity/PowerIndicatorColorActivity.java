@@ -87,6 +87,7 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
 
     @Override
     public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
+        mSelected = newVal;
         if (newVal > 1) {
             llColorSettings.setVisibility(View.GONE);
         } else {

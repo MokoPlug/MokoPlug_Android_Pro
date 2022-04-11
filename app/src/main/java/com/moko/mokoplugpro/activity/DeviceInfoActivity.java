@@ -152,6 +152,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
+        EventBus.getDefault().cancelEventDelivery(event);
         final String action = event.getAction();
         runOnUiThread(() -> {
             if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {

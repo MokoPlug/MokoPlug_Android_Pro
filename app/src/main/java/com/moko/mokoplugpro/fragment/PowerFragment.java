@@ -80,10 +80,10 @@ public class PowerFragment extends Fragment {
                                         if (length == 11) {
                                             int voltage = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 6));
                                             int current = MokoUtils.toIntSigned(Arrays.copyOfRange(value, 6, 8));
-                                            int power = MokoUtils.toInt(Arrays.copyOfRange(value, 8, 12));
+                                            int power = MokoUtils.toIntSigned(Arrays.copyOfRange(value, 8, 12));
                                             int frequency = MokoUtils.toInt(Arrays.copyOfRange(value, 12, 14));
                                             int powerFactor = value[14] & 0xFF;
-                                            setPowerData(voltage, current,power,frequency,powerFactor);
+                                            setPowerData(voltage, current, power, frequency, powerFactor);
                                         }
                                         break;
 
@@ -120,10 +120,10 @@ public class PowerFragment extends Fragment {
                                         if (length == 11) {
                                             int voltage = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 6));
                                             int current = MokoUtils.toIntSigned(Arrays.copyOfRange(value, 6, 8));
-                                            int power = MokoUtils.toInt(Arrays.copyOfRange(value, 8, 12));
+                                            int power = MokoUtils.toIntSigned(Arrays.copyOfRange(value, 8, 12));
                                             int frequency = MokoUtils.toInt(Arrays.copyOfRange(value, 12, 14));
                                             int powerFactor = value[14] & 0xFF;
-                                            setPowerData(voltage, current,power,frequency,powerFactor);
+                                            setPowerData(voltage, current, power, frequency, powerFactor);
                                         }
                                         break;
                                 }
