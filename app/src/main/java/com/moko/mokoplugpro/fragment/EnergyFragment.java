@@ -123,11 +123,11 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                                 energyDataSum += energyInt;
                                                 EnergyInfo energyInfo = new EnergyInfo();
                                                 energyInfo.time = String.format("%02d:00", i);
-                                                energyInfo.value = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyBytes) * 0.01f);
+                                                energyInfo.value = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyBytes) * 0.001f);
                                                 energyInfoList.add(0, energyInfo);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.##").format(energyDataSum * 0.01f));
+                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                     case KEY_ENERGY_DAILY:
@@ -138,8 +138,8 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             int hour = value[8] & 0xFF;
                                             int count = value[9] & 0xFF;
                                             byte[] energyDataBytes = Arrays.copyOfRange(value, 10, length);
-                                            if (energyDataBytes.length % 2 != 0
-                                                    || energyDataBytes.length / 2 != count)
+                                            if (energyDataBytes.length % 3 != 0
+                                                    || energyDataBytes.length / 3 != count)
                                                 break;
                                             Calendar calendar = Calendar.getInstance();
                                             calendar.set(Calendar.YEAR, year);
@@ -149,25 +149,25 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             String end = MokoUtils.calendar2strDate(calendar, "MM-dd");
                                             Calendar startCalendar = (Calendar) calendar.clone();
                                             startCalendar.add(Calendar.DAY_OF_MONTH, -(count - 1));
-                                            String start = MokoUtils.calendar2strDate(calendar, "MM-dd");
+                                            String start = MokoUtils.calendar2strDate(startCalendar, "MM-dd");
                                             tvDuration.setText(String.format("%s to %s", start, end));
                                             energyInfoList.clear();
                                             int energyDataSum = 0;
                                             for (int i = 0; i < count; i++) {
-                                                int from = 10 + 2 * i;
-                                                int to = 12 + 2 * i;
+                                                int from = 10 + 3 * i;
+                                                int to = 13 + 3 * i;
                                                 byte[] energyBytes = Arrays.copyOfRange(value, from, to);
                                                 int energyInt = MokoUtils.toInt(energyBytes);
                                                 energyDataSum += energyInt;
                                                 EnergyInfo energyInfo = new EnergyInfo();
                                                 String date = MokoUtils.calendar2strDate(calendar, "MM-dd");
                                                 energyInfo.time = date;
-                                                energyInfo.value = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyBytes) * 0.01f);
+                                                energyInfo.value = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyBytes) * 0.001f);
                                                 energyInfoList.add(energyInfo);
                                                 calendar.add(Calendar.DAY_OF_MONTH, -1);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.##").format(energyDataSum * 0.01f));
+                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                 }
@@ -233,11 +233,11 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                                 energyDataSum += energyInt;
                                                 EnergyInfo energyInfo = new EnergyInfo();
                                                 energyInfo.time = String.format("%02d:00", i);
-                                                energyInfo.value = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyBytes) * 0.01f);
+                                                energyInfo.value = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyBytes) * 0.001f);
                                                 energyInfoList.add(0, energyInfo);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.##").format(energyDataSum * 0.01f));
+                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                     case KEY_ENERGY_DAILY:
@@ -248,8 +248,8 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             int hour = value[8] & 0xFF;
                                             int count = value[9] & 0xFF;
                                             byte[] energyDataBytes = Arrays.copyOfRange(value, 10, 4 + length);
-                                            if (energyDataBytes.length % 2 != 0
-                                                    || energyDataBytes.length / 2 != count)
+                                            if (energyDataBytes.length % 3 != 0
+                                                    || energyDataBytes.length / 3 != count)
                                                 break;
                                             Calendar calendar = Calendar.getInstance();
                                             calendar.set(Calendar.YEAR, year);
@@ -259,31 +259,31 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             String end = MokoUtils.calendar2strDate(calendar, "MM-dd");
                                             Calendar startCalendar = (Calendar) calendar.clone();
                                             startCalendar.add(Calendar.DAY_OF_MONTH, -(count - 1));
-                                            String start = MokoUtils.calendar2strDate(calendar, "MM-dd");
+                                            String start = MokoUtils.calendar2strDate(startCalendar, "MM-dd");
                                             tvDuration.setText(String.format("%s to %s", start, end));
                                             energyInfoList.clear();
                                             int energyDataSum = 0;
                                             for (int i = 0; i < count; i++) {
-                                                int from = 10 + 2 * i;
-                                                int to = 12 + 2 * i;
+                                                int from = 10 + 3 * i;
+                                                int to = 13 + 3 * i;
                                                 byte[] energyBytes = Arrays.copyOfRange(value, from, to);
                                                 int energyInt = MokoUtils.toInt(energyBytes);
                                                 energyDataSum += energyInt;
                                                 EnergyInfo energyInfo = new EnergyInfo();
                                                 String date = MokoUtils.calendar2strDate(calendar, "MM-dd");
                                                 energyInfo.time = date;
-                                                energyInfo.value = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyBytes) * 0.01f);
+                                                energyInfo.value = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyBytes) * 0.001f);
                                                 energyInfoList.add(energyInfo);
                                                 calendar.add(Calendar.DAY_OF_MONTH, -1);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.##").format(energyDataSum * 0.01f));
+                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                     case KEY_ENERGY_TOTALLY:
                                         if (length == 4) {
                                             byte[] energyDataBytes = Arrays.copyOfRange(value, 4, 4 + length);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyDataBytes) * 0.01f));
+                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyDataBytes) * 0.001f));
                                         }
                                         break;
                                 }

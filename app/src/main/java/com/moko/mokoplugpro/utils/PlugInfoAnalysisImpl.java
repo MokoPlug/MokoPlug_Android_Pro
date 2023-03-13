@@ -50,7 +50,7 @@ public class PlugInfoAnalysisImpl implements DeviceInfoAnalysis<PlugInfo> {
         current = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toIntSigned(currentBytes) * 0.001f);
         power = MokoUtils.getDecimalFormat("0.#").format(MokoUtils.toIntSigned(powerBytes) * 0.1f);
         currentRate = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(currentRateBytes) * 0.01f);
-        energyTotal = MokoUtils.getDecimalFormat("0.##").format(MokoUtils.toInt(energyTotalBytes) * 0.01f);
+        energyTotal = MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyTotalBytes) * 0.001f);
         if ((state & 0x01) == 0x01)
             isConnectable = 1;
         if ((state & 0x02) == 0x02)
