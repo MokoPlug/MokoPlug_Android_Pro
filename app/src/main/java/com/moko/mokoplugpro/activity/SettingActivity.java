@@ -1,10 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -13,10 +10,9 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
+import com.moko.mokoplugpro.databinding.ActivitySettingBinding;
 import com.moko.mokoplugpro.dialog.AlertMessageDialog;
 import com.moko.mokoplugpro.dialog.ChangePasswordDialog;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.entity.PlugInfo;
 import com.moko.mokoplugpro.event.DataChangedEvent;
 import com.moko.support.pro.MokoSupport;
@@ -35,22 +31,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class SettingActivity extends BaseActivity {
-
-
-    @BindView(R2.id.tv_title)
-    TextView tvTitle;
-    @BindView(R2.id.tv_change_password)
-    TextView tvChangePassword;
-    @BindView(R2.id.iv_connectStatus)
-    ImageView ivConnectStatus;
-    @BindView(R2.id.iv_password_verify_enable)
-    ImageView ivPasswordVerifyEnable;
-    @BindView(R2.id.iv_clear_energy_reset_enable)
-    ImageView ivClearEnergyResetEnable;
+public class SettingActivity extends BaseActivity<ActivitySettingBinding> {
 
     private PlugInfo mPlugInfo;
 
@@ -59,12 +40,9 @@ public class SettingActivity extends BaseActivity {
     private boolean mIsClearEnergyResetEnable;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         mPlugInfo = getIntent().getParcelableExtra(AppConstants.EXTRA_KEY_PLUG_INFO);
-        tvTitle.setText(mPlugInfo.name);
+        mBind.tvTitle.setText(mPlugInfo.name);
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -74,10 +52,15 @@ public class SettingActivity extends BaseActivity {
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
+    @Override
+    protected ActivitySettingBinding getViewBinding() {
+        return ActivitySettingBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDataChangedEvent(DataChangedEvent event) {
         String value = event.getValue();
-        tvTitle.setText(value);
+        mBind.tvTitle.setText(value);
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 300)
@@ -181,22 +164,22 @@ public class SettingActivity extends BaseActivity {
                                         if (length > 0) {
                                             int status = value[4] & 0xFF;
                                             mIsConnectEnable = status == 1;
-                                            ivConnectStatus.setImageResource(mIsConnectEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.ivConnectStatus.setImageResource(mIsConnectEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
                                         }
                                         break;
                                     case KEY_PASSWORD_VERIFY_ENABLE:
                                         if (length > 0) {
                                             int status = value[4] & 0xFF;
                                             mIsPasswordVerifyEnable = status == 1;
-                                            ivPasswordVerifyEnable.setImageResource(mIsPasswordVerifyEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
-                                            tvChangePassword.setVisibility(mIsPasswordVerifyEnable ? View.VISIBLE : View.GONE);
+                                            mBind.ivPasswordVerifyEnable.setImageResource(mIsPasswordVerifyEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.tvChangePassword.setVisibility(mIsPasswordVerifyEnable ? View.VISIBLE : View.GONE);
                                         }
                                         break;
                                     case KEY_CLEAR_ENERGY_ENABLE:
                                         if (length > 0) {
                                             int status = value[4] & 0xFF;
                                             mIsClearEnergyResetEnable = status == 1;
-                                            ivClearEnergyResetEnable.setImageResource(mIsClearEnergyResetEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.ivClearEnergyResetEnable.setImageResource(mIsClearEnergyResetEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
                                         }
                                         break;
                                 }
@@ -382,19 +365,6 @@ public class SettingActivity extends BaseActivity {
             MokoSupport.getInstance().disConnectBle();
         });
         dialog.show(getSupportFragmentManager());
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 
     @Override

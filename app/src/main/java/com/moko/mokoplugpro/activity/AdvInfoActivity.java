@@ -1,13 +1,10 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.TextView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -15,8 +12,7 @@ import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityAdvInfoBinding;
 import com.moko.mokoplugpro.entity.TxPowerEnum;
 import com.moko.mokoplugpro.event.DataChangedEvent;
 import com.moko.mokoplugpro.utils.ToastUtils;
@@ -34,27 +30,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarChangeListener {
+public class AdvInfoActivity extends BaseActivity<ActivityAdvInfoBinding> implements SeekBar.OnSeekBarChangeListener {
 
     private final String FILTER_ASCII = "[ -~]*";
-    @BindView(R2.id.et_adv_interval)
-    EditText etAdvInterval;
-    @BindView(R2.id.et_adv_name)
-    EditText etAdvName;
-    @BindView(R2.id.sb_tx_power)
-    SeekBar sbTxPower;
-    @BindView(R2.id.tv_tx_power_value)
-    TextView tvTxPowerValue;
     private boolean savedParamsError;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_adv_info);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         InputFilter filter = new InputFilter() {
             @Override
             public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
@@ -65,8 +47,8 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
                 return null;
             }
         };
-        etAdvName.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20), filter});
-        sbTxPower.setOnSeekBarChangeListener(this);
+        mBind.etAdvName.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20), filter});
+        mBind.sbTxPower.setOnSeekBarChangeListener(this);
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -74,6 +56,11 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
         orderTasks.add(OrderTaskAssembler.getAdvInterval());
         orderTasks.add(OrderTaskAssembler.getTxPower());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityAdvInfoBinding getViewBinding() {
+        return ActivityAdvInfoBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -158,7 +145,7 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
                                 switch (paramsKeyEnum) {
                                     case KEY_ADV_NAME:
                                         DataChangedEvent dataChangedEvent = new DataChangedEvent();
-                                        final String advName = etAdvName.getText().toString();
+                                        final String advName = mBind.etAdvName.getText().toString();
                                         dataChangedEvent.setValue(advName);
                                         EventBus.getDefault().post(dataChangedEvent);
                                     case KEY_ADV_INTERVAL:
@@ -184,21 +171,21 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
                                     case KEY_ADV_NAME:
                                         if (length > 0) {
                                             byte[] advNameBytes = Arrays.copyOfRange(value, 4, 4 + length);
-                                            etAdvName.setText(new String(advNameBytes));
+                                            mBind.etAdvName.setText(new String(advNameBytes));
                                         }
                                         break;
                                     case KEY_ADV_INTERVAL:
                                         if (length == 1) {
                                             int interval = value[4] & 0xFF;
-                                            etAdvInterval.setText(String.valueOf(interval));
+                                            mBind.etAdvInterval.setText(String.valueOf(interval));
                                         }
                                         break;
                                     case KEY_TX_POWER:
                                         if (length == 1) {
                                             int txPower = value[4];
                                             TxPowerEnum txPowerEnum = TxPowerEnum.fromTxPower(txPower);
-                                            sbTxPower.setProgress(txPowerEnum.ordinal());
-                                            tvTxPowerValue.setText(String.format("%ddBm", txPower));
+                                            mBind.sbTxPower.setProgress(txPowerEnum.ordinal());
+                                            mBind.tvTxPowerValue.setText(String.format("%ddBm", txPower));
                                         }
                                         break;
                                 }
@@ -223,10 +210,10 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
     }
 
     private void saveParams() {
-        final String advName = etAdvName.getText().toString();
-        final String advInterval = etAdvInterval.getText().toString();
+        final String advName = mBind.etAdvName.getText().toString();
+        final String advInterval = mBind.etAdvInterval.getText().toString();
         final int interval = Integer.parseInt(advInterval);
-        final int txPower = TxPowerEnum.fromOrdinal(sbTxPower.getProgress()).getTxPower();
+        final int txPower = TxPowerEnum.fromOrdinal(mBind.sbTxPower.getProgress()).getTxPower();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.setAdvName(advName));
         orderTasks.add(OrderTaskAssembler.setAdvInterval(interval));
@@ -235,11 +222,11 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
     }
 
     private boolean isValid() {
-        final String advName = etAdvName.getText().toString();
+        final String advName = mBind.etAdvName.getText().toString();
         if (TextUtils.isEmpty(advName)) {
             return false;
         }
-        final String advInterval = etAdvInterval.getText().toString();
+        final String advInterval = mBind.etAdvInterval.getText().toString();
         if (TextUtils.isEmpty(advInterval)) {
             return false;
         }
@@ -263,23 +250,10 @@ public class AdvInfoActivity extends BaseActivity implements SeekBar.OnSeekBarCh
         EventBus.getDefault().unregister(this);
     }
 
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
-    }
-
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
         TxPowerEnum txPowerEnum = TxPowerEnum.fromOrdinal(progress);
-        tvTxPowerValue.setText(String.format("%ddBm", txPowerEnum.getTxPower()));
+        mBind.tvTxPowerValue.setText(String.format("%ddBm", txPowerEnum.getTxPower()));
     }
 
     @Override

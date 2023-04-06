@@ -6,18 +6,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.activity.DeviceInfoActivity;
 import com.moko.mokoplugpro.adapter.EnergyListAdapter;
+import com.moko.mokoplugpro.databinding.FragmentEnergyProBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.entity.ConfigKeyEnum;
 import com.moko.support.pro.entity.EnergyInfo;
@@ -33,37 +31,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChangeListener {
 
     private static final String TAG = EnergyFragment.class.getSimpleName();
-    @BindView(R2.id.rg_energy)
-    RadioGroup rgEnergy;
-    @BindView(R2.id.tv_energy_total)
-    TextView tvEnergyTotal;
-    @BindView(R2.id.tv_duration)
-    TextView tvDuration;
-    @BindView(R2.id.tv_unit)
-    TextView tvUnit;
-    @BindView(R2.id.rv_energy)
-    RecyclerView rvEnergy;
-    @BindView(R2.id.rb_hourly)
-    RadioButton rbHourly;
-    @BindView(R2.id.rb_daily)
-    RadioButton rbDaily;
-    @BindView(R2.id.rb_totally)
-    RadioButton rbTotally;
-    @BindView(R2.id.cl_energy)
-    ConstraintLayout clEnergy;
-    @BindView(R2.id.tv_clear_energy_data)
-    TextView tvClearEnergyData;
-    @BindView(R2.id.tv_energy_desc)
-    TextView tvEnergyDesc;
+    private FragmentEnergyProBinding mBind;
     private List<EnergyInfo> energyInfoList;
     private EnergyListAdapter adapter;
 
@@ -102,13 +75,13 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                             if (flag == 0x02) {
                                 switch (notifyKeyEnum) {
                                     case KEY_ENERGY_HOURLY:
-                                        if (length > 0 && rbHourly.isChecked()) {
+                                        if (length > 0 && mBind.rbHourly.isChecked()) {
                                             int year = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 6));
                                             int month = value[6] & 0xFF;
                                             int day = value[7] & 0xFF;
                                             int hour = value[8] & 0xFF;
                                             int count = value[9] & 0xFF;
-                                            tvDuration.setText(String.format("00:00 to %02d:00,%02d-%02d", hour, month, day));
+                                            mBind.tvDuration.setText(String.format("00:00 to %02d:00,%02d-%02d", hour, month, day));
                                             byte[] energyDataBytes = Arrays.copyOfRange(value, 10, length);
                                             if (energyDataBytes.length % 2 != 0
                                                     || energyDataBytes.length / 2 != count)
@@ -127,11 +100,11 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                                 energyInfoList.add(0, energyInfo);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
+                                            mBind.tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                     case KEY_ENERGY_DAILY:
-                                        if (length > 0 && rbDaily.isChecked()) {
+                                        if (length > 0 && mBind.rbDaily.isChecked()) {
                                             int year = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 6));
                                             int month = value[6] & 0xFF;
                                             int day = value[7] & 0xFF;
@@ -150,7 +123,7 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             Calendar startCalendar = (Calendar) calendar.clone();
                                             startCalendar.add(Calendar.DAY_OF_MONTH, -(count - 1));
                                             String start = MokoUtils.calendar2strDate(startCalendar, "MM-dd");
-                                            tvDuration.setText(String.format("%s to %s", start, end));
+                                            mBind.tvDuration.setText(String.format("%s to %s", start, end));
                                             energyInfoList.clear();
                                             int energyDataSum = 0;
                                             for (int i = 0; i < count; i++) {
@@ -167,7 +140,7 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                                 calendar.add(Calendar.DAY_OF_MONTH, -1);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
+                                            mBind.tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                 }
@@ -222,7 +195,7 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             if (energyDataBytes.length % 2 != 0
                                                     || energyDataBytes.length / 2 != count)
                                                 break;
-                                            tvDuration.setText(String.format("00:00 to %02d:00,%02d-%02d", hour, month, day));
+                                            mBind.tvDuration.setText(String.format("00:00 to %02d:00,%02d-%02d", hour, month, day));
                                             energyInfoList.clear();
                                             int energyDataSum = 0;
                                             for (int i = 0; i < count; i++) {
@@ -237,7 +210,7 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                                 energyInfoList.add(0, energyInfo);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
+                                            mBind.tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                     case KEY_ENERGY_DAILY:
@@ -260,7 +233,7 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                             Calendar startCalendar = (Calendar) calendar.clone();
                                             startCalendar.add(Calendar.DAY_OF_MONTH, -(count - 1));
                                             String start = MokoUtils.calendar2strDate(startCalendar, "MM-dd");
-                                            tvDuration.setText(String.format("%s to %s", start, end));
+                                            mBind.tvDuration.setText(String.format("%s to %s", start, end));
                                             energyInfoList.clear();
                                             int energyDataSum = 0;
                                             for (int i = 0; i < count; i++) {
@@ -277,13 +250,13 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
                                                 calendar.add(Calendar.DAY_OF_MONTH, -1);
                                             }
                                             adapter.replaceData(energyInfoList);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
+                                            mBind.tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(energyDataSum * 0.001f));
                                         }
                                         break;
                                     case KEY_ENERGY_TOTALLY:
                                         if (length == 4) {
                                             byte[] energyDataBytes = Arrays.copyOfRange(value, 4, 4 + length);
-                                            tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyDataBytes) * 0.001f));
+                                            mBind.tvEnergyTotal.setText(MokoUtils.getDecimalFormat("0.###").format(MokoUtils.toInt(energyDataBytes) * 0.001f));
                                         }
                                         break;
                                 }
@@ -306,18 +279,17 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        View view = inflater.inflate(R.layout.fragment_energy_pro, container, false);
-        ButterKnife.bind(this, view);
+        mBind = FragmentEnergyProBinding.inflate(inflater, container, false);
+        activity = (DeviceInfoActivity) getActivity();
         energyInfoList = new ArrayList<>();
         adapter = new EnergyListAdapter();
         adapter.replaceData(energyInfoList);
         adapter.openLoadAnimation();
-        rvEnergy.setLayoutManager(new LinearLayoutManager(getActivity()));
-        rvEnergy.setAdapter(adapter);
-        activity = (DeviceInfoActivity) getActivity();
-        rgEnergy.setOnCheckedChangeListener(this);
+        mBind.rvEnergy.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mBind.rvEnergy.setAdapter(adapter);
+        mBind.rgEnergy.setOnCheckedChangeListener(this);
         EventBus.getDefault().register(this);
-        return view;
+        return mBind.getRoot();
     }
 
     @Override
@@ -331,23 +303,23 @@ public class EnergyFragment extends Fragment implements RadioGroup.OnCheckedChan
     public void onCheckedChanged(RadioGroup group, int checkedId) {
         if (checkedId == R.id.rb_hourly) {
             // 切换日
-            clEnergy.setVisibility(View.VISIBLE);
-            tvClearEnergyData.setVisibility(View.GONE);
-            tvUnit.setText("Hour");
-            tvEnergyDesc.setText("Today energy:");
+            mBind.clEnergy.setVisibility(View.VISIBLE);
+            mBind.tvClearEnergyData.setVisibility(View.GONE);
+            mBind.tvUnit.setText("Hour");
+            mBind.tvEnergyDesc.setText("Today energy:");
             activity.getEnergyHourly();
         } else if (checkedId == R.id.rb_daily) {
             // 切换月
-            clEnergy.setVisibility(View.VISIBLE);
-            tvClearEnergyData.setVisibility(View.GONE);
-            tvUnit.setText("Date");
-            tvEnergyDesc.setText("Last 30 days energy:");
+            mBind.clEnergy.setVisibility(View.VISIBLE);
+            mBind.tvClearEnergyData.setVisibility(View.GONE);
+            mBind.tvUnit.setText("Date");
+            mBind.tvEnergyDesc.setText("Last 30 days energy:");
             activity.getEnergyDaily();
         } else if (checkedId == R.id.rb_totally) {
             // 切换总电能
-            tvEnergyDesc.setText("Historical total energy:");
-            clEnergy.setVisibility(View.GONE);
-            tvClearEnergyData.setVisibility(View.VISIBLE);
+            mBind.tvEnergyDesc.setText("Historical total energy:");
+            mBind.clEnergy.setVisibility(View.GONE);
+            mBind.tvClearEnergyData.setVisibility(View.VISIBLE);
             activity.getEnergyTotally();
         }
     }

@@ -3,14 +3,10 @@ package com.moko.mokoplugpro.activity;
 
 import android.app.FragmentManager;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 
 import com.elvishew.xlog.XLog;
 import com.moko.ble.lib.MokoConstants;
@@ -20,9 +16,8 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
+import com.moko.mokoplugpro.databinding.ActivityDeviceInfoProBinding;
 import com.moko.mokoplugpro.dialog.AlertMessageDialog;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.entity.PlugInfo;
 import com.moko.mokoplugpro.event.DataChangedEvent;
 import com.moko.mokoplugpro.fragment.EnergyFragment;
@@ -43,23 +38,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.IdRes;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
-public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener {
+public class DeviceInfoActivity extends BaseActivity<ActivityDeviceInfoProBinding> implements RadioGroup.OnCheckedChangeListener {
 
-    @BindView(R2.id.frame_container)
-    FrameLayout frameContainer;
-    @BindView(R2.id.tv_title)
-    TextView tvTitle;
-    @BindView(R2.id.radioBtn_power)
-    RadioButton radioBtnPower;
-    @BindView(R2.id.radioBtn_energy)
-    RadioButton radioBtnEnergy;
-    @BindView(R2.id.rg_options)
-    RadioGroup rgOptions;
-    @BindView(R2.id.radioBtn_switch)
-    RadioButton radioBtnSwitch;
     private FragmentManager fragmentManager;
     private SwitchFragment switchFragment;
     private PowerFragment powerFragment;
@@ -70,15 +51,12 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
     private int mOverStatus;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_info_pro);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         initFragment();
-        rgOptions.setOnCheckedChangeListener(this);
-        radioBtnSwitch.setChecked(true);
+        mBind.rgOptions.setOnCheckedChangeListener(this);
+        mBind.radioBtnSwitch.setChecked(true);
         mPlugInfo = getIntent().getParcelableExtra(AppConstants.EXTRA_KEY_PLUG_INFO);
-        tvTitle.setText(mPlugInfo.name);
+        mBind.tvTitle.setText(mPlugInfo.name);
         mHandler = new Handler(Looper.getMainLooper());
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
@@ -88,6 +66,11 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
             orderTasks.add(OrderTaskAssembler.getSwitchStatus());
             MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
         }, 500);
+    }
+
+    @Override
+    protected ActivityDeviceInfoProBinding getViewBinding() {
+        return ActivityDeviceInfoProBinding.inflate(getLayoutInflater());
     }
 
     private void showOverDialog() {
@@ -147,7 +130,7 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDataChangedEvent(DataChangedEvent event) {
         String value = event.getValue();
-        tvTitle.setText(value);
+        mBind.tvTitle.setText(value);
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
@@ -464,18 +447,5 @@ public class DeviceInfoActivity extends BaseActivity implements RadioGroup.OnChe
                 finish();
             }
         }
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    public void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    public void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

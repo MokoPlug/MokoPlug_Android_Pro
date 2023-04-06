@@ -1,8 +1,6 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.view.View;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.moko.ble.lib.MokoConstants;
@@ -11,8 +9,7 @@ import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityBleConnectedBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -27,32 +24,21 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener {
-
-
-    @BindView(R2.id.rb_solid_blue)
-    RadioButton rbSolidBlue;
-    @BindView(R2.id.rb_solid_blue_5)
-    RadioButton rbSolidBlue5;
-    @BindView(R2.id.rb_off)
-    RadioButton rbOff;
-    @BindView(R2.id.rg_ble_status)
-    RadioGroup rgBleStatus;
+public class BleConnectedActivity extends BaseActivity<ActivityBleConnectedBinding> implements RadioGroup.OnCheckedChangeListener {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ble_connected);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
 
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getIndicatorBleConnectedStatus());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityBleConnectedBinding getViewBinding() {
+        return ActivityBleConnectedBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
@@ -151,16 +137,16 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
                                             bleState = value[4] & 0xFF;
                                             switch (bleState) {
                                                 case 0:
-                                                    rbOff.setChecked(true);
+                                                    mBind.rbOff.setChecked(true);
                                                     break;
                                                 case 1:
-                                                    rbSolidBlue5.setChecked(true);
+                                                    mBind.rbSolidBlue5.setChecked(true);
                                                     break;
                                                 case 2:
-                                                    rbSolidBlue.setChecked(true);
+                                                    mBind.rbSolidBlue.setChecked(true);
                                                     break;
                                             }
-                                            rgBleStatus.setOnCheckedChangeListener(this);
+                                            mBind.rgBleStatus.setOnCheckedChangeListener(this);
                                         }
                                         break;
 
@@ -179,19 +165,6 @@ public class BleConnectedActivity extends BaseActivity implements RadioGroup.OnC
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 
     int bleState;

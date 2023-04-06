@@ -6,15 +6,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
-import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.activity.DeviceInfoActivity;
+import com.moko.mokoplugpro.databinding.FragmentPowerProBinding;
 import com.moko.support.pro.entity.ConfigKeyEnum;
 import com.moko.support.pro.entity.NotifyKeyEnum;
 import com.moko.support.pro.entity.OrderCHAR;
@@ -25,22 +23,10 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Arrays;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class PowerFragment extends Fragment {
 
     private static final String TAG = PowerFragment.class.getSimpleName();
-    @BindView(R2.id.tv_voltage)
-    TextView tvVoltage;
-    @BindView(R2.id.tv_current)
-    TextView tvCurrent;
-    @BindView(R2.id.tv_power)
-    TextView tvPower;
-    @BindView(R2.id.tv_power_factor)
-    TextView tvPowerFactor;
-    @BindView(R2.id.tv_frequency)
-    TextView tvFrequency;
+    private FragmentPowerProBinding mBind;
 
     private DeviceInfoActivity activity;
 
@@ -139,11 +125,10 @@ public class PowerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        View view = inflater.inflate(R.layout.fragment_power_pro, container, false);
-        ButterKnife.bind(this, view);
+        mBind = FragmentPowerProBinding.inflate(inflater, container, false);
         activity = (DeviceInfoActivity) getActivity();
         EventBus.getDefault().register(this);
-        return view;
+        return mBind.getRoot();
     }
 
     @Override
@@ -159,11 +144,11 @@ public class PowerFragment extends Fragment {
         String powerStr = MokoUtils.getDecimalFormat("0.#").format(power * 0.1f);
         String frequencyStr = MokoUtils.getDecimalFormat("0.##").format(frequency * 0.01f);
         String powerFactorStr = MokoUtils.getDecimalFormat("0.##").format(powerFactor * 0.01f);
-        tvVoltage.setText(voltageStr);
-        tvCurrent.setText(currentStr);
-        tvPower.setText(powerStr);
-        tvFrequency.setText(frequencyStr);
-        tvPowerFactor.setText(powerFactorStr);
+        mBind.tvVoltage.setText(voltageStr);
+        mBind.tvCurrent.setText(currentStr);
+        mBind.tvPower.setText(powerStr);
+        mBind.tvFrequency.setText(frequencyStr);
+        mBind.tvPowerFactor.setText(powerFactorStr);
     }
 
 }

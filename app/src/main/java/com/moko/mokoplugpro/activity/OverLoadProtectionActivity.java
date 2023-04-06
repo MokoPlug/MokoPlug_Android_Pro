@@ -1,10 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -14,8 +11,7 @@ import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityOverLoadProtectionBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -31,31 +27,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+public class OverLoadProtectionActivity extends BaseActivity<ActivityOverLoadProtectionBinding> {
 
-public class OverLoadProtectionActivity extends BaseActivity {
-
-
-    @BindView(R2.id.cb_overload_protection)
-    CheckBox cbOverloadProtection;
-    @BindView(R2.id.et_power_threshold)
-    EditText etPowerThreshold;
-    @BindView(R2.id.et_time_threshold)
-    EditText etTimeThreshold;
     private int productType;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_over_load_protection);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         productType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_PRODUCT_TYPE, 0);
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getOverLoadProtection());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    public ActivityOverLoadProtectionBinding getViewBinding() {
+        return ActivityOverLoadProtectionBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
@@ -153,10 +141,10 @@ public class OverLoadProtectionActivity extends BaseActivity {
                                     case KEY_OVER_LOAD_PROTECTION:
                                         if (length == 4) {
                                             int enable = value[4] & 0xFF;
-                                            cbOverloadProtection.setChecked(enable == 1);
+                                            mBind.cbOverloadProtection.setChecked(enable == 1);
                                             int threshold = MokoUtils.toInt(Arrays.copyOfRange(value, 5, 7));
-                                            etPowerThreshold.setText(String.valueOf(threshold));
-                                            etTimeThreshold.setText(String.valueOf(value[7] & 0xFF));
+                                            mBind.etPowerThreshold.setText(String.valueOf(threshold));
+                                            mBind.etTimeThreshold.setText(String.valueOf(value[7] & 0xFF));
                                         }
                                         break;
 
@@ -182,12 +170,12 @@ public class OverLoadProtectionActivity extends BaseActivity {
     }
 
     private void saveParams() {
-        final String powerThresholdStr = etPowerThreshold.getText().toString();
-        final String timeThresholdStr = etTimeThreshold.getText().toString();
+        final String powerThresholdStr = mBind.etPowerThreshold.getText().toString();
+        final String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         final int powerThreshold = Integer.parseInt(powerThresholdStr);
         final int timeThreshold = Integer.parseInt(timeThresholdStr);
         List<OrderTask> orderTasks = new ArrayList<>();
-        orderTasks.add(OrderTaskAssembler.setOverLoadProtection(cbOverloadProtection.isChecked() ? 1 : 0, powerThreshold, timeThreshold));
+        orderTasks.add(OrderTaskAssembler.setOverLoadProtection(mBind.cbOverloadProtection.isChecked() ? 1 : 0, powerThreshold, timeThreshold));
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
@@ -198,7 +186,7 @@ public class OverLoadProtectionActivity extends BaseActivity {
         } else if (productType == 2) {
             max = 3588;
         }
-        final String powerThresholdStr = etPowerThreshold.getText().toString();
+        final String powerThresholdStr = mBind.etPowerThreshold.getText().toString();
         if (TextUtils.isEmpty(powerThresholdStr)) {
             return false;
         }
@@ -206,7 +194,7 @@ public class OverLoadProtectionActivity extends BaseActivity {
         if (powerThreshold < 10 || powerThreshold > max) {
             return false;
         }
-        final String timeThresholdStr = etTimeThreshold.getText().toString();
+        final String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         if (TextUtils.isEmpty(timeThresholdStr)) {
             return false;
         }
@@ -228,18 +216,5 @@ public class OverLoadProtectionActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

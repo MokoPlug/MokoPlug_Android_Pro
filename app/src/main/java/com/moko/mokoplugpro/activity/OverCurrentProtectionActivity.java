@@ -1,10 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -13,8 +10,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityOverCurrentProtectionBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -29,31 +25,23 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+public class OverCurrentProtectionActivity extends BaseActivity<ActivityOverCurrentProtectionBinding> {
 
-public class OverCurrentProtectionActivity extends BaseActivity {
-
-
-    @BindView(R2.id.cb_over_current_protection)
-    CheckBox cbOverCurrentProtection;
-    @BindView(R2.id.et_current_threshold)
-    EditText etCurrentThreshold;
-    @BindView(R2.id.et_time_threshold)
-    EditText etTimeThreshold;
     private int productType;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_over_current_protection);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         productType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_PRODUCT_TYPE, 0);
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getOverCurrentProtection());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityOverCurrentProtectionBinding getViewBinding() {
+        return ActivityOverCurrentProtectionBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
@@ -150,10 +138,10 @@ public class OverCurrentProtectionActivity extends BaseActivity {
                                     case KEY_OVER_CURRENT_PROTECTION:
                                         if (length == 3) {
                                             int enable = value[4] & 0xFF;
-                                            cbOverCurrentProtection.setChecked(enable == 1);
+                                            mBind.cbOverCurrentProtection.setChecked(enable == 1);
                                             int threshold = value[5] & 0xFF;
-                                            etCurrentThreshold.setText(String.valueOf(threshold));
-                                            etTimeThreshold.setText(String.valueOf(value[6] & 0xFF));
+                                            mBind.etCurrentThreshold.setText(String.valueOf(threshold));
+                                            mBind.etTimeThreshold.setText(String.valueOf(value[6] & 0xFF));
                                         }
                                         break;
 
@@ -179,12 +167,12 @@ public class OverCurrentProtectionActivity extends BaseActivity {
     }
 
     private void saveParams() {
-        final String currentThresholdStr = etCurrentThreshold.getText().toString();
-        final String timeThresholdStr = etTimeThreshold.getText().toString();
+        final String currentThresholdStr = mBind.etCurrentThreshold.getText().toString();
+        final String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         final int currentThreshold = Integer.parseInt(currentThresholdStr);
         final int timeThreshold = Integer.parseInt(timeThresholdStr);
         List<OrderTask> orderTasks = new ArrayList<>();
-        orderTasks.add(OrderTaskAssembler.setOverCurrentProtection(cbOverCurrentProtection.isChecked() ? 1 : 0, currentThreshold, timeThreshold));
+        orderTasks.add(OrderTaskAssembler.setOverCurrentProtection(mBind.cbOverCurrentProtection.isChecked() ? 1 : 0, currentThreshold, timeThreshold));
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
@@ -195,7 +183,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         } else if (productType == 2) {
             max = 156;
         }
-        final String currentThresholdStr = etCurrentThreshold.getText().toString();
+        final String currentThresholdStr = mBind.etCurrentThreshold.getText().toString();
         if (TextUtils.isEmpty(currentThresholdStr)) {
             return false;
         }
@@ -203,7 +191,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         if (currentThreshold < 1 || currentThreshold > max) {
             return false;
         }
-        final String timeThresholdStr = etTimeThreshold.getText().toString();
+        final String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         if (TextUtils.isEmpty(timeThresholdStr)) {
             return false;
         }
@@ -225,18 +213,5 @@ public class OverCurrentProtectionActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

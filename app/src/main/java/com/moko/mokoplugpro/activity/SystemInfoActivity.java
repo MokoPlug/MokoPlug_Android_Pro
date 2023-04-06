@@ -4,11 +4,9 @@ import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
-import android.widget.TextView;
 
 import com.elvishew.xlog.XLog;
 import com.moko.ble.lib.MokoConstants;
@@ -17,9 +15,8 @@ import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
+import com.moko.mokoplugpro.databinding.ActivitySystemInfoBinding;
 import com.moko.mokoplugpro.dialog.AlertMessageDialog;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
 import com.moko.mokoplugpro.service.DfuService;
 import com.moko.mokoplugpro.utils.FileUtils;
 import com.moko.mokoplugpro.utils.ToastUtils;
@@ -39,37 +36,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import no.nordicsemi.android.dfu.DfuProgressListener;
 import no.nordicsemi.android.dfu.DfuProgressListenerAdapter;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 
-public class SystemInfoActivity extends BaseActivity {
+public class SystemInfoActivity extends BaseActivity<ActivitySystemInfoBinding> {
 
     public static final int REQUEST_CODE_SELECT_FIRMWARE = 0x10;
-
-    @BindView(R2.id.tv_product_model)
-    TextView tvProductModel;
-    @BindView(R2.id.tv_manufacturer)
-    TextView tvManufacturer;
-    @BindView(R2.id.tv_software_version)
-    TextView tvSoftwareVersion;
-    @BindView(R2.id.tv_firmware_version)
-    TextView tvFirmwareVersion;
-    @BindView(R2.id.tv_device_mac)
-    TextView tvDeviceMac;
 
     private boolean isUpdate;
     private String mDeviceMac;
     private String mDeviceName;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_system_info);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -80,6 +61,11 @@ public class SystemInfoActivity extends BaseActivity {
         orderTasks.add(OrderTaskAssembler.getMac());
         orderTasks.add(OrderTaskAssembler.getAdvName());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivitySystemInfoBinding getViewBinding() {
+        return ActivitySystemInfoBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -153,19 +139,19 @@ public class SystemInfoActivity extends BaseActivity {
                 byte[] value = response.responseValue;
                 switch (orderCHAR) {
                     case CHAR_MODEL_NUMBER:
-                        tvProductModel.setText(new String(value).trim());
+                        mBind.tvProductModel.setText(new String(value).trim());
                         break;
                     case CHAR_MANUFACTURER_NAME:
-                        tvManufacturer.setText(new String(value).trim());
+                        mBind.tvManufacturer.setText(new String(value).trim());
                         break;
                     case CHAR_SOFTWARE_REVISION:
-                        tvSoftwareVersion.setText(new String(value).trim());
+                        mBind.tvSoftwareVersion.setText(new String(value).trim());
                         break;
                     case CHAR_FIRMWARE_REVISION:
-                        tvFirmwareVersion.setText(new String(value).trim());
+                        mBind.tvFirmwareVersion.setText(new String(value).trim());
                         break;
                     case CHAR_MAC:
-                        tvDeviceMac.setText(new String(value).trim());
+                        mBind.tvDeviceMac.setText(new String(value).trim());
                         StringBuffer stringBuffer = new StringBuffer(new String(value));
                         stringBuffer.insert(2, ":");
                         stringBuffer.insert(5, ":");
@@ -215,19 +201,6 @@ public class SystemInfoActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 
     public void onUpdateFirmware(View view) {

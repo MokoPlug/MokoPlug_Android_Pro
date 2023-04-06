@@ -1,9 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -13,8 +11,7 @@ import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityIndicatorSettingBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -30,25 +27,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSettingBinding> {
 
-public class IndicatorSettingActivity extends BaseActivity {
-
-
-    @BindView(R2.id.iv_ble_advertising)
-    ImageView ivBleAdvertising;
-    @BindView(R2.id.iv_protection_signal)
-    ImageView ivProtectionSignal;
     private boolean isBleAdvEnable;
     private boolean isProtectionSignalEnable;
     private int productType;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_indicator_setting);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -56,6 +42,11 @@ public class IndicatorSettingActivity extends BaseActivity {
         orderTasks.add(OrderTaskAssembler.getIndicatorPowerProtectionStatus());
         orderTasks.add(OrderTaskAssembler.getProductType());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityIndicatorSettingBinding getViewBinding() {
+        return ActivityIndicatorSettingBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -153,13 +144,13 @@ public class IndicatorSettingActivity extends BaseActivity {
                                     case KEY_INDICATOR_BLE_ADV_STATUS:
                                         if (length == 1) {
                                             isBleAdvEnable = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length)) == 1;
-                                            ivBleAdvertising.setImageResource(isBleAdvEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.ivBleAdvertising.setImageResource(isBleAdvEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
                                         }
                                         break;
                                     case KEY_INDICATOR_POWER_PROTECTION_STATUS:
                                         if (length == 1) {
                                             isProtectionSignalEnable = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length)) == 1;
-                                            ivProtectionSignal.setImageResource(isProtectionSignalEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.ivProtectionSignal.setImageResource(isProtectionSignalEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
                                         }
                                         break;
                                     case KEY_PRODUCT_TYPE:
@@ -226,19 +217,5 @@ public class IndicatorSettingActivity extends BaseActivity {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
     }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
-    }
-
 
 }

@@ -1,10 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -13,8 +10,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityUnderVoltageProtectionBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -29,31 +25,23 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUnderVoltageProtectionBinding> {
 
-public class UnderVoltageProtectionActivity extends BaseActivity {
-
-
-    @BindView(R2.id.cb_under_voltage_protection)
-    CheckBox cbUnderVoltageProtection;
-    @BindView(R2.id.et_voltage_threshold)
-    EditText etVoltageThreshold;
-    @BindView(R2.id.et_time_threshold)
-    EditText etTimeThreshold;
     private int productType;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_under_voltage_protection);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         productType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_PRODUCT_TYPE, 0);
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getSagVoltageProtection());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityUnderVoltageProtectionBinding getViewBinding() {
+        return ActivityUnderVoltageProtectionBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 500)
@@ -150,9 +138,9 @@ public class UnderVoltageProtectionActivity extends BaseActivity {
                                     case KEY_SAG_VOLTAGE_PROTECTION:
                                         if (length == 3) {
                                             int enable = value[4] & 0xFF;
-                                            cbUnderVoltageProtection.setChecked(enable == 1);
-                                            etVoltageThreshold.setText(String.valueOf(value[5] & 0xFF));
-                                            etTimeThreshold.setText(String.valueOf(value[6] & 0xFF));
+                                            mBind.cbUnderVoltageProtection.setChecked(enable == 1);
+                                            mBind.etVoltageThreshold.setText(String.valueOf(value[5] & 0xFF));
+                                            mBind.etTimeThreshold.setText(String.valueOf(value[6] & 0xFF));
                                         }
                                         break;
 
@@ -178,12 +166,12 @@ public class UnderVoltageProtectionActivity extends BaseActivity {
     }
 
     private void saveParams() {
-        final String voltageThresholdStr = etVoltageThreshold.getText().toString();
-        final String timeThresholdStr = etTimeThreshold.getText().toString();
+        final String voltageThresholdStr = mBind.etVoltageThreshold.getText().toString();
+        final String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         final int voltageThreshold = Integer.parseInt(voltageThresholdStr);
         final int timeThreshold = Integer.parseInt(timeThresholdStr);
         List<OrderTask> orderTasks = new ArrayList<>();
-        orderTasks.add(OrderTaskAssembler.setSagVoltageProtection(cbUnderVoltageProtection.isChecked() ? 1 : 0, voltageThreshold, timeThreshold));
+        orderTasks.add(OrderTaskAssembler.setSagVoltageProtection(mBind.cbUnderVoltageProtection.isChecked() ? 1 : 0, voltageThreshold, timeThreshold));
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
@@ -194,7 +182,7 @@ public class UnderVoltageProtectionActivity extends BaseActivity {
             min = 102;
             max = 119;
         }
-        final String voltageThresholdStr = etVoltageThreshold.getText().toString();
+        final String voltageThresholdStr = mBind.etVoltageThreshold.getText().toString();
         if (TextUtils.isEmpty(voltageThresholdStr)) {
             return false;
         }
@@ -202,7 +190,7 @@ public class UnderVoltageProtectionActivity extends BaseActivity {
         if (voltageThreshold < min || voltageThreshold > max) {
             return false;
         }
-        final String timeThresholdStr = etTimeThreshold.getText().toString();
+        final String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         if (TextUtils.isEmpty(timeThresholdStr)) {
             return false;
         }
@@ -224,18 +212,5 @@ public class UnderVoltageProtectionActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

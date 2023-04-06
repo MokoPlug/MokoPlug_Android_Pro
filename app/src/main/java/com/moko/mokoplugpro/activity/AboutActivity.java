@@ -2,32 +2,26 @@ package com.moko.mokoplugpro.activity;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 
 import com.moko.mokoplugpro.BuildConfig;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
+import com.moko.mokoplugpro.databinding.ActivityAboutProBinding;
 import com.moko.mokoplugpro.utils.Utils;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
-
-public class AboutActivity extends BaseActivity {
-
-    @BindView(R2.id.tv_soft_version)
-    TextView tvSoftVersion;
+public class AboutActivity extends BaseActivity<ActivityAboutProBinding> {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_about_pro);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         if (!BuildConfig.IS_LIBRARY) {
-            tvSoftVersion.setText(String.format(getString(R.string.version_info), Utils.getVersionInfo(this)));
+            mBind.tvSoftVersion.setText(String.format(getString(R.string.version_info), Utils.getVersionInfo(this)));
         }
+    }
+
+    @Override
+    protected ActivityAboutProBinding getViewBinding() {
+        return ActivityAboutProBinding.inflate(getLayoutInflater());
     }
 
     public void openURL(View view) {
