@@ -1,9 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -12,8 +10,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityPeriodicalReportBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -29,29 +26,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class PeriodicalReportActivity extends BaseActivity {
-
-    @BindView(R2.id.et_switch_report_interval)
-    EditText etSwitchReportInterval;
-    @BindView(R2.id.et_power_report_interval)
-    EditText etPowerReportInterval;
+public class PeriodicalReportActivity extends BaseActivity<ActivityPeriodicalReportBinding> {
 
     private boolean savedParamsError;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_periodical_report);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getSwitchReportInterval());
         orderTasks.add(OrderTaskAssembler.getPowerReportInterval());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityPeriodicalReportBinding getViewBinding() {
+        return ActivityPeriodicalReportBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -157,13 +148,13 @@ public class PeriodicalReportActivity extends BaseActivity {
                                     case KEY_SWITCH_REPORT_INTERVAL:
                                         if (length == 2) {
                                             int interval = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length));
-                                            etSwitchReportInterval.setText(String.valueOf(interval));
+                                            mBind.etSwitchReportInterval.setText(String.valueOf(interval));
                                         }
                                         break;
                                     case KEY_POWER_REPORT_INTERVAL:
                                         if (length == 2) {
                                             int interval = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length));
-                                            etPowerReportInterval.setText(String.valueOf(interval));
+                                            mBind.etPowerReportInterval.setText(String.valueOf(interval));
                                         }
                                         break;
                                 }
@@ -188,8 +179,8 @@ public class PeriodicalReportActivity extends BaseActivity {
     }
 
     private void saveParams() {
-        final String switchReportIntervalStr = etSwitchReportInterval.getText().toString();
-        final String powerReportIntervalStr = etPowerReportInterval.getText().toString();
+        final String switchReportIntervalStr = mBind.etSwitchReportInterval.getText().toString();
+        final String powerReportIntervalStr = mBind.etPowerReportInterval.getText().toString();
         final int switchReportInterval = Integer.parseInt(switchReportIntervalStr);
         final int powerReportInterval = Integer.parseInt(powerReportIntervalStr);
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -199,7 +190,7 @@ public class PeriodicalReportActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        final String switchReportIntervalStr = etSwitchReportInterval.getText().toString();
+        final String switchReportIntervalStr = mBind.etSwitchReportInterval.getText().toString();
         if (TextUtils.isEmpty(switchReportIntervalStr)) {
             return false;
         }
@@ -207,7 +198,7 @@ public class PeriodicalReportActivity extends BaseActivity {
         if (switchReportInterval < 1 || switchReportInterval > 600) {
             return false;
         }
-        final String powerReportIntervalStr = etPowerReportInterval.getText().toString();
+        final String powerReportIntervalStr = mBind.etPowerReportInterval.getText().toString();
         if (TextUtils.isEmpty(powerReportIntervalStr)) {
             return false;
         }
@@ -229,18 +220,5 @@ public class PeriodicalReportActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

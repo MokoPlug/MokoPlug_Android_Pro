@@ -1,7 +1,6 @@
 package com.moko.mokoplugpro.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
 
 import com.moko.ble.lib.MokoConstants;
@@ -11,7 +10,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityProtectionSettingBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -26,22 +25,22 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.ButterKnife;
-
-public class ProtectionSettingActivity extends BaseActivity {
+public class ProtectionSettingActivity extends BaseActivity<ActivityProtectionSettingBinding> {
 
     private int productType;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_protection_setting);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getProductType());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityProtectionSettingBinding getViewBinding() {
+        return ActivityProtectionSettingBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -150,19 +149,6 @@ public class ProtectionSettingActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 
     public void onOverloadProtectionClick(View view) {

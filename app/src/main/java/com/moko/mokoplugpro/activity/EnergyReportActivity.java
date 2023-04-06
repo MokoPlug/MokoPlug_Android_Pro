@@ -1,9 +1,7 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -12,8 +10,7 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityEnergyReportBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -29,23 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+public class EnergyReportActivity extends BaseActivity<ActivityEnergyReportBinding> {
 
-public class EnergyReportActivity extends BaseActivity {
-
-
-    @BindView(R2.id.et_energy_report_interval)
-    EditText etEnergyReportInterval;
-    @BindView(R2.id.et_power_change_threshold)
-    EditText etPowerChangeThreshold;
     private boolean savedParamsError;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_energy_report);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -53,6 +39,12 @@ public class EnergyReportActivity extends BaseActivity {
         orderTasks.add(OrderTaskAssembler.getPowerChangeThreshold());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
+
+    @Override
+    protected ActivityEnergyReportBinding getViewBinding() {
+        return ActivityEnergyReportBinding.inflate(getLayoutInflater());
+    }
+
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
@@ -158,13 +150,13 @@ public class EnergyReportActivity extends BaseActivity {
                                     case KEY_ENERGY_SAVED_INTERVAL:
                                         if (length == 1) {
                                             int interval = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length));
-                                            etEnergyReportInterval.setText(String.valueOf(interval));
+                                            mBind.etEnergyReportInterval.setText(String.valueOf(interval));
                                         }
                                         break;
                                     case KEY_POWER_CHANGE_THRESHOLD:
                                         if (length == 1) {
                                             int threshold = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length));
-                                            etPowerChangeThreshold.setText(String.valueOf(threshold));
+                                            mBind.etPowerChangeThreshold.setText(String.valueOf(threshold));
                                         }
                                         break;
                                 }
@@ -189,8 +181,8 @@ public class EnergyReportActivity extends BaseActivity {
     }
 
     private void saveParams() {
-        final String energyReportIntervalStr = etEnergyReportInterval.getText().toString();
-        final String powerChangeThresholdStr = etPowerChangeThreshold.getText().toString();
+        final String energyReportIntervalStr = mBind.etEnergyReportInterval.getText().toString();
+        final String powerChangeThresholdStr = mBind.etPowerChangeThreshold.getText().toString();
         final int energyReportInterval = Integer.parseInt(energyReportIntervalStr);
         final int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
         List<OrderTask> orderTasks = new ArrayList<>();
@@ -200,7 +192,7 @@ public class EnergyReportActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        final String energyReportIntervalStr = etEnergyReportInterval.getText().toString();
+        final String energyReportIntervalStr = mBind.etEnergyReportInterval.getText().toString();
         if (TextUtils.isEmpty(energyReportIntervalStr)) {
             return false;
         }
@@ -208,7 +200,7 @@ public class EnergyReportActivity extends BaseActivity {
         if (energyReportInterval < 1 || energyReportInterval > 60) {
             return false;
         }
-        final String powerChangeThresholdStr = etPowerChangeThreshold.getText().toString();
+        final String powerChangeThresholdStr = mBind.etPowerChangeThreshold.getText().toString();
         if (TextUtils.isEmpty(powerChangeThresholdStr)) {
             return false;
         }
@@ -230,18 +222,5 @@ public class EnergyReportActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

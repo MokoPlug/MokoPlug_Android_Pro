@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,9 +13,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.elvishew.xlog.XLog;
@@ -27,16 +23,14 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.BuildConfig;
-import com.moko.mokoplugpro.utils.PlugInfoAnalysisImpl;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
 import com.moko.mokoplugpro.adapter.PlugListAdapter;
+import com.moko.mokoplugpro.databinding.ActivityMainProBinding;
 import com.moko.mokoplugpro.dialog.AlertMessageDialog;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
-import com.moko.mokoplugpro.dialog.LoadingMessageDialog;
 import com.moko.mokoplugpro.dialog.PasswordDialog;
 import com.moko.mokoplugpro.dialog.ScanFilterDialog;
 import com.moko.mokoplugpro.entity.PlugInfo;
+import com.moko.mokoplugpro.utils.PlugInfoAnalysisImpl;
 import com.moko.mokoplugpro.utils.SPUtiles;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoBleScanner;
@@ -63,26 +57,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 
-public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallback, BaseQuickAdapter.OnItemChildClickListener {
+public class ProMainActivity extends BaseActivity<ActivityMainProBinding> implements MokoScanDeviceCallback, BaseQuickAdapter.OnItemChildClickListener {
 
-
-    @BindView(R2.id.rv_devices)
-    RecyclerView rvDevices;
-    @BindView(R2.id.iv_refresh)
-    ImageView ivRefresh;
-    @BindView(R2.id.tv_device_num)
-    TextView tvDeviceNum;
-    @BindView(R2.id.tv_filter)
-    TextView tvFilter;
-    @BindView(R2.id.rl_filter)
-    RelativeLayout rlFilter;
-    @BindView(R2.id.rl_edit_filter)
-    RelativeLayout rlEditFilter;
     private boolean mReceiverTag = false;
     private ConcurrentHashMap<String, PlugInfo> plugInfoHashMap;
     private ArrayList<PlugInfo> plugInfos;
@@ -96,14 +74,11 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
     public static String PATH_LOGCAT;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_pro);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         // 初始化Xlog
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             // 优先保存到SD卡中
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 PATH_LOGCAT = getExternalFilesDir(null).getAbsolutePath() + File.separator + (BuildConfig.IS_LIBRARY ? "MokoPlug" : "MokoPlugPro");
             } else {
                 PATH_LOGCAT = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + (BuildConfig.IS_LIBRARY ? "MokoPlug" : "MokoPlugPro");
@@ -120,11 +95,11 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
         adapter.replaceData(plugInfos);
         adapter.setOnItemChildClickListener(this);
         adapter.openLoadAnimation();
-        rvDevices.setLayoutManager(new LinearLayoutManager(this));
+        mBind.rvDevices.setLayoutManager(new LinearLayoutManager(this));
         DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.shape_recycleview_divider));
-        rvDevices.addItemDecoration(itemDecoration);
-        rvDevices.setAdapter(adapter);
+        mBind.rvDevices.addItemDecoration(itemDecoration);
+        mBind.rvDevices.setAdapter(adapter);
         mHandler = new Handler(Looper.getMainLooper());
         mokoBleScanner = new MokoBleScanner(this);
         EventBus.getDefault().register(this);
@@ -141,6 +116,11 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                 startScan();
             }
         }
+    }
+
+    @Override
+    protected ActivityMainProBinding getViewBinding() {
+        return ActivityMainProBinding.inflate(getLayoutInflater());
     }
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -197,7 +177,7 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                 intent.putExtra(AppConstants.EXTRA_KEY_PLUG_INFO, mSelectedPlugInfo);
                 startActivityForResult(intent, AppConstants.REQUEST_CODE_DEVICE_INFO);
             } else {
-                showLoadingMessageDialog();
+                showLoadingMessageDialog("Verifying..");
                 mHandler.postDelayed(() -> {
                     // open password notify and set password
                     List<OrderTask> orderTasks = new ArrayList<>();
@@ -317,7 +297,7 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                         @Override
                         public void run() {
                             adapter.replaceData(plugInfos);
-                            tvDeviceNum.setText(String.format("DEVICE(%d)", plugInfos.size()));
+                            mBind.tvDeviceNum.setText(String.format("DEVICE(%d)", plugInfos.size()));
                         }
                     });
                     try {
@@ -423,8 +403,8 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
             mHandler.removeMessages(0);
             mokoBleScanner.stopScanDevice();
         }
-        rlFilter.setVisibility(View.GONE);
-        rlEditFilter.setVisibility(View.VISIBLE);
+        mBind.rlFilter.setVisibility(View.GONE);
+        mBind.rlEditFilter.setVisibility(View.VISIBLE);
         filterName = "";
         filterRssi = -100;
         if (isWindowLocked())
@@ -450,8 +430,8 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                 ProMainActivity.this.filterName = filterName;
                 ProMainActivity.this.filterRssi = filterRssi;
                 if (!TextUtils.isEmpty(filterName) || filterRssi != -100) {
-                    rlFilter.setVisibility(View.VISIBLE);
-                    rlEditFilter.setVisibility(View.GONE);
+                    mBind.rlFilter.setVisibility(View.VISIBLE);
+                    mBind.rlEditFilter.setVisibility(View.GONE);
                     StringBuilder stringBuilder = new StringBuilder();
                     if (!TextUtils.isEmpty(filterName)) {
                         stringBuilder.append(filterName);
@@ -461,10 +441,10 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                         stringBuilder.append(String.format("%sdBm", filterRssi + ""));
                         stringBuilder.append(";");
                     }
-                    tvFilter.setText(stringBuilder.toString());
+                    mBind.tvFilter.setText(stringBuilder.toString());
                 } else {
-                    rlFilter.setVisibility(View.GONE);
-                    rlEditFilter.setVisibility(View.VISIBLE);
+                    mBind.rlFilter.setVisibility(View.GONE);
+                    mBind.rlEditFilter.setVisibility(View.VISIBLE);
                 }
                 if (isWindowLocked())
                     return;
@@ -509,7 +489,7 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                 return;
             }
             showLoadingProgressDialog();
-            ivRefresh.postDelayed(() -> {
+            mBind.ivRefresh.postDelayed(() -> {
                 MokoSupport.getInstance().connDevice(plugInfo.mac);
             }, 500);
         }
@@ -528,7 +508,7 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                 XLog.i(password);
                 mPassword = password;
                 showLoadingProgressDialog();
-                ivRefresh.postDelayed(() -> {
+                mBind.ivRefresh.postDelayed(() -> {
                     MokoSupport.getInstance().connDevice(plugInfo.mac);
                 }, 500);
             }
@@ -549,33 +529,6 @@ public class ProMainActivity extends BaseActivity implements MokoScanDeviceCallb
                 runOnUiThread(() -> dialog.showKeyboard());
             }
         }, 200);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
-    }
-
-    private LoadingMessageDialog mLoadingMessageDialog;
-
-    private void showLoadingMessageDialog() {
-        mLoadingMessageDialog = new LoadingMessageDialog();
-        mLoadingMessageDialog.setMessage("Verifying..");
-        mLoadingMessageDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingMessageDialog() {
-        if (mLoadingMessageDialog != null)
-            mLoadingMessageDialog.dismissAllowingStateLoss();
     }
 
 

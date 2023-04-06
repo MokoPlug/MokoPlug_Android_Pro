@@ -1,13 +1,8 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -17,8 +12,7 @@ import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mokoplugpro.AppConstants;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityPowerIndicatorColorBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -34,33 +28,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 
-public class PowerIndicatorColorActivity extends BaseActivity implements NumberPickerView.OnValueChangeListener, CompoundButton.OnCheckedChangeListener {
+public class PowerIndicatorColorActivity extends BaseActivity<ActivityPowerIndicatorColorBinding> implements NumberPickerView.OnValueChangeListener, CompoundButton.OnCheckedChangeListener {
 
-
-    @BindView(R2.id.cb_indicator_switch_status)
-    CheckBox cbIndicatorSwitchStatus;
-    @BindView(R2.id.npv_color_settings)
-    NumberPickerView npvColorSettings;
-    @BindView(R2.id.et_blue)
-    EditText etBlue;
-    @BindView(R2.id.et_green)
-    EditText etGreen;
-    @BindView(R2.id.et_yellow)
-    EditText etYellow;
-    @BindView(R2.id.et_orange)
-    EditText etOrange;
-    @BindView(R2.id.et_red)
-    EditText etRed;
-    @BindView(R2.id.et_purple)
-    EditText etPurple;
-    @BindView(R2.id.ll_color_settings)
-    LinearLayout llColorSettings;
-    @BindView(R2.id.sv_color_setting)
-    ScrollView svColorSetting;
     private int productType;
 
     private boolean savedParamsError;
@@ -68,16 +39,13 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
     private int mSelected;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_power_indicator_color);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         productType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_PRODUCT_TYPE, 0);
-        npvColorSettings.setMinValue(0);
-        npvColorSettings.setMaxValue(8);
-        npvColorSettings.setValue(0);
-        npvColorSettings.setOnValueChangedListener(this);
-        cbIndicatorSwitchStatus.setOnCheckedChangeListener(this);
+        mBind.npvColorSettings.setMinValue(0);
+        mBind.npvColorSettings.setMaxValue(8);
+        mBind.npvColorSettings.setValue(0);
+        mBind.npvColorSettings.setOnValueChangedListener(this);
+        mBind.cbIndicatorSwitchStatus.setOnCheckedChangeListener(this);
         EventBus.getDefault().register(this);
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getIndicatorPowerSwitchStatus());
@@ -86,12 +54,17 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
     }
 
     @Override
+    protected ActivityPowerIndicatorColorBinding getViewBinding() {
+        return ActivityPowerIndicatorColorBinding.inflate(getLayoutInflater());
+    }
+
+    @Override
     public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
         mSelected = newVal;
         if (newVal > 1) {
-            llColorSettings.setVisibility(View.GONE);
+            mBind.llColorSettings.setVisibility(View.GONE);
         } else {
-            llColorSettings.setVisibility(View.VISIBLE);
+            mBind.llColorSettings.setVisibility(View.VISIBLE);
         }
     }
 
@@ -179,7 +152,7 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
                                         if (result == 0) {
                                             savedParamsError = true;
                                         }
-                                        if (!cbIndicatorSwitchStatus.isChecked()) {
+                                        if (!mBind.cbIndicatorSwitchStatus.isChecked()) {
                                             if (savedParamsError) {
                                                 savedParamsError = false;
                                                 ToastUtils.showToast(this, "Setup failed!");
@@ -207,37 +180,37 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
                                     case KEY_POWER_INDICATOR:
                                         if (length > 0) {
                                             mSelected = value[4] & 0xFF;
-                                            npvColorSettings.setValue(mSelected);
+                                            mBind.npvColorSettings.setValue(mSelected);
                                             if (mSelected > 1) {
-                                                llColorSettings.setVisibility(View.GONE);
+                                                mBind.llColorSettings.setVisibility(View.GONE);
                                             } else {
-                                                llColorSettings.setVisibility(View.VISIBLE);
+                                                mBind.llColorSettings.setVisibility(View.VISIBLE);
                                             }
                                             byte[] blueBytes = Arrays.copyOfRange(value, 5, 7);
                                             int blue = MokoUtils.toInt(blueBytes);
-                                            etBlue.setText(String.valueOf(blue));
+                                            mBind.etBlue.setText(String.valueOf(blue));
                                             byte[] greenBytes = Arrays.copyOfRange(value, 7, 9);
                                             int green = MokoUtils.toInt(greenBytes);
-                                            etGreen.setText(String.valueOf(green));
+                                            mBind.etGreen.setText(String.valueOf(green));
                                             byte[] yellowBytes = Arrays.copyOfRange(value, 9, 11);
                                             int yellow = MokoUtils.toInt(yellowBytes);
-                                            etYellow.setText(String.valueOf(yellow));
+                                            mBind.etYellow.setText(String.valueOf(yellow));
                                             byte[] orangeBytes = Arrays.copyOfRange(value, 11, 13);
                                             int orange = MokoUtils.toInt(orangeBytes);
-                                            etOrange.setText(String.valueOf(orange));
+                                            mBind.etOrange.setText(String.valueOf(orange));
                                             byte[] redBytes = Arrays.copyOfRange(value, 13, 15);
                                             int red = MokoUtils.toInt(redBytes);
-                                            etRed.setText(String.valueOf(red));
+                                            mBind.etRed.setText(String.valueOf(red));
                                             byte[] purpleBytes = Arrays.copyOfRange(value, 15, 17);
                                             int purple = MokoUtils.toInt(purpleBytes);
-                                            etPurple.setText(String.valueOf(purple));
+                                            mBind.etPurple.setText(String.valueOf(purple));
                                         }
                                         break;
                                     case KEY_INDICATOR_POWER_SWITCH_STATUS:
                                         if (length == 1) {
                                             int enable = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 4 + length));
-                                            cbIndicatorSwitchStatus.setChecked(enable == 1);
-                                            svColorSetting.setVisibility(enable == 1 ? View.VISIBLE : View.GONE);
+                                            mBind.cbIndicatorSwitchStatus.setChecked(enable == 1);
+                                            mBind.svColorSetting.setVisibility(enable == 1 ? View.VISIBLE : View.GONE);
                                         }
                                         break;
 
@@ -254,7 +227,7 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
     public void onSave(View view) {
         if (isWindowLocked())
             return;
-        if (!cbIndicatorSwitchStatus.isChecked()) {
+        if (!mBind.cbIndicatorSwitchStatus.isChecked()) {
             showLoadingProgressDialog();
             MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setIndicatorPowerSwitchStatus(0));
             return;
@@ -268,12 +241,12 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
     }
 
     private void saveParams() {
-        final String blue = etBlue.getText().toString();
-        final String green = etGreen.getText().toString();
-        final String yellow = etYellow.getText().toString();
-        final String orange = etOrange.getText().toString();
-        final String red = etRed.getText().toString();
-        final String purple = etPurple.getText().toString();
+        final String blue = mBind.etBlue.getText().toString();
+        final String green = mBind.etGreen.getText().toString();
+        final String yellow = mBind.etYellow.getText().toString();
+        final String orange = mBind.etOrange.getText().toString();
+        final String red = mBind.etRed.getText().toString();
+        final String purple = mBind.etPurple.getText().toString();
         final int blueValue = Integer.parseInt(blue);
         final int greenValue = Integer.parseInt(green);
         final int yellowValue = Integer.parseInt(yellow);
@@ -290,12 +263,12 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
     }
 
     private boolean isValid() {
-        final String blue = etBlue.getText().toString();
-        final String green = etGreen.getText().toString();
-        final String yellow = etYellow.getText().toString();
-        final String orange = etOrange.getText().toString();
-        final String red = etRed.getText().toString();
-        final String purple = etPurple.getText().toString();
+        final String blue = mBind.etBlue.getText().toString();
+        final String green = mBind.etGreen.getText().toString();
+        final String yellow = mBind.etYellow.getText().toString();
+        final String orange = mBind.etOrange.getText().toString();
+        final String red = mBind.etRed.getText().toString();
+        final String purple = mBind.etPurple.getText().toString();
         if (TextUtils.isEmpty(blue) || TextUtils.isEmpty(green) || TextUtils.isEmpty(yellow)
                 || TextUtils.isEmpty(orange) || TextUtils.isEmpty(red) || TextUtils.isEmpty(purple)) {
             return false;
@@ -352,21 +325,8 @@ public class PowerIndicatorColorActivity extends BaseActivity implements NumberP
         EventBus.getDefault().unregister(this);
     }
 
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
-    }
-
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-        svColorSetting.setVisibility(b ? View.VISIBLE : View.GONE);
+        mBind.svColorSetting.setVisibility(b ? View.VISIBLE : View.GONE);
     }
 }

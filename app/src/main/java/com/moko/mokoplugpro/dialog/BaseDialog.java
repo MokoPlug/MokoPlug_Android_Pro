@@ -4,21 +4,19 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 
 import com.moko.mokoplugpro.R;
 
-import butterknife.ButterKnife;
+import androidx.viewbinding.ViewBinding;
 
 
-public abstract class BaseDialog<T> extends Dialog {
-    protected T t;
+public abstract class BaseDialog<VM extends ViewBinding> extends Dialog {
     private boolean dismissEnable;
     private Animation animation;
+    protected VM mBind;
 
     public BaseDialog(Context context) {
         super(context, R.style.BaseDialogTheme);
@@ -32,27 +30,21 @@ public abstract class BaseDialog<T> extends Dialog {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final View convertView = LayoutInflater.from(getContext()).inflate(getLayoutResId(), null);
-        ButterKnife.bind(this, convertView);
-        renderConvertView(convertView, t);
+        mBind = getViewBind();
+        setContentView(mBind.getRoot());
+        onCreate();
         if (animation != null) {
-            convertView.setAnimation(animation);
+            mBind.getRoot().setAnimation(animation);
         }
         if (dismissEnable) {
-            convertView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
+            mBind.getRoot().setOnClickListener(v -> dismiss());
         }
-        setContentView(convertView);
     }
 
-    protected abstract int getLayoutResId();
+    protected abstract VM getViewBind();
 
-    protected abstract void renderConvertView(final View convertView, final T t);
-
+    protected void onCreate() {
+    }
 
     @Override
     public void show() {
@@ -65,10 +57,6 @@ public abstract class BaseDialog<T> extends Dialog {
         //设置窗口高度为包裹内容
         layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT;
         window.setAttributes(layoutParams);
-    }
-
-    public void setData(T t) {
-        this.t = t;
     }
 
     protected void setAnimation(Animation animation) {

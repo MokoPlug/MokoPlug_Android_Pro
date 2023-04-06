@@ -1,8 +1,6 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.view.View;
-import android.widget.CheckBox;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -10,8 +8,7 @@ import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityLoadStatusNotifyBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -26,26 +23,22 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+public class LoadStatusNotifyActivity extends BaseActivity<ActivityLoadStatusNotifyBinding> {
 
-public class LoadStatusNotifyActivity extends BaseActivity {
 
-    @BindView(R2.id.cb_load_start_notify)
-    CheckBox cbLoadStartNotify;
-    @BindView(R2.id.cb_load_stop_notify)
-    CheckBox cbLoadStopNotify;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_load_status_notify);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getLoadNotifySwitch());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityLoadStatusNotifyBinding getViewBinding() {
+        return ActivityLoadStatusNotifyBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -143,8 +136,8 @@ public class LoadStatusNotifyActivity extends BaseActivity {
                                         if (length == 2) {
                                             int start = value[4] & 0xFF;
                                             int stop = value[5] & 0xFF;
-                                            cbLoadStartNotify.setChecked(start == 1);
-                                            cbLoadStopNotify.setChecked(stop == 1);
+                                            mBind.cbLoadStartNotify.setChecked(start == 1);
+                                            mBind.cbLoadStopNotify.setChecked(stop == 1);
                                         }
                                         break;
 
@@ -162,7 +155,7 @@ public class LoadStatusNotifyActivity extends BaseActivity {
         if (isWindowLocked())
             return;
         List<OrderTask> orderTasks = new ArrayList<>();
-        orderTasks.add(OrderTaskAssembler.setLoadNotifySwitch(cbLoadStartNotify.isChecked() ? 1 : 0, cbLoadStopNotify.isChecked() ? 1 : 0));
+        orderTasks.add(OrderTaskAssembler.setLoadNotifySwitch(mBind.cbLoadStartNotify.isChecked() ? 1 : 0, mBind.cbLoadStopNotify.isChecked() ? 1 : 0));
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
@@ -177,18 +170,5 @@ public class LoadStatusNotifyActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }

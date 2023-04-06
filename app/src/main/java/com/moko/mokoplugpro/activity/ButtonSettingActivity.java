@@ -1,8 +1,6 @@
 package com.moko.mokoplugpro.activity;
 
-import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
@@ -10,8 +8,7 @@ import com.moko.ble.lib.event.OrderTaskResponseEvent;
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mokoplugpro.R;
-import com.moko.mokoplugpro.R2;
-import com.moko.mokoplugpro.dialog.LoadingDialog;
+import com.moko.mokoplugpro.databinding.ActivityButtonSettingBinding;
 import com.moko.mokoplugpro.utils.ToastUtils;
 import com.moko.support.pro.MokoSupport;
 import com.moko.support.pro.OrderTaskAssembler;
@@ -26,31 +23,24 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class ButtonSettingActivity extends BaseActivity {
-
-
-    @BindView(R2.id.iv_btn_switch)
-    ImageView ivBtnSwitch;
-    @BindView(R2.id.iv_btn_reset)
-    ImageView ivBtnReset;
+public class ButtonSettingActivity extends BaseActivity<ActivityButtonSettingBinding> {
 
     private boolean isBtnSwitchEnable;
     private boolean isBtnResetEnable;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_button_setting);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         EventBus.getDefault().register(this);
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
         orderTasks.add(OrderTaskAssembler.getButtonControlEnable());
         orderTasks.add(OrderTaskAssembler.getButtonResetEnable());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    @Override
+    protected ActivityButtonSettingBinding getViewBinding() {
+        return ActivityButtonSettingBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 400)
@@ -149,14 +139,14 @@ public class ButtonSettingActivity extends BaseActivity {
                                         if (length == 1) {
                                             int enable = value[4] & 0xFF;
                                             isBtnSwitchEnable = enable == 1;
-                                            ivBtnSwitch.setImageResource(isBtnSwitchEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.ivBtnSwitch.setImageResource(isBtnSwitchEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
                                         }
                                         break;
                                     case KEY_BUTTON_RESET_ENABLE:
                                         if (length == 1) {
                                             int enable = value[4] & 0xFF;
                                             isBtnResetEnable = enable == 1;
-                                            ivBtnReset.setImageResource(isBtnResetEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
+                                            mBind.ivBtnReset.setImageResource(isBtnResetEnable ? R.drawable.ic_checked : R.drawable.ic_unchecked);
                                         }
                                         break;
 
@@ -203,18 +193,5 @@ public class ButtonSettingActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-    }
-
-    private LoadingDialog mLoadingDialog;
-
-    private void showLoadingProgressDialog() {
-        mLoadingDialog = new LoadingDialog();
-        mLoadingDialog.show(getSupportFragmentManager());
-
-    }
-
-    private void dismissLoadingProgressDialog() {
-        if (mLoadingDialog != null)
-            mLoadingDialog.dismissAllowingStateLoss();
     }
 }
